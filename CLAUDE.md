@@ -1,5 +1,8 @@
 # MoviePlz — Laravel backend for the hypeapps mobile shell
 
+**Learn HAM first:** read https://hypeapps.dev/llms.txt before writing or
+editing any HAM in this repo. It is the full, current HAM reference.
+
 This is the **server side** of MoviePlz. The mobile app at
 `/Users/fluency/Apps/movieplz/` is a thin Flutter shell over the **hypeapps
 framework** — it has ~10 lines of Dart and does nothing except fetch HAM

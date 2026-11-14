@@ -1,5 +1,12 @@
 # MoviePlz
 
+> **Writing HAM?** Every screen in this app is HAM (HypeApps Markup). Read
+> **[hypeapps.dev/llms.txt](https://hypeapps.dev/llms.txt)** first: it's the
+> full HAM reference (every tag, attribute, style and action), written so
+> both people and AI coding assistants can learn it. If you use an AI
+> assistant, point it at that file before it edits anything in
+> `resources/views/ham/`.
+
 MoviePlz is a private app for suggesting movies and series to a friend.
 One person, the host, has a library: the films and shows they own or can
 watch. Friends join it with a five-digit code the host reads to them. They
