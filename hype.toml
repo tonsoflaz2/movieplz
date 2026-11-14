@@ -1,0 +1,43 @@
+# A Hype app: a native shell around the screens your server sends
+# (or, until there is a server, the .ham files in this folder).
+# See: hype guide
+
+[app]
+name   = "MoviePlz"
+id     = "com.hypeapps.movieplz"          # the bundle id; a production ticket binds to it
+engine = "1"
+version = "1.0"
+folder = "resources/views/ham"   # where the app's HAM lives: app.blade.php makes the <app>
+splash_logo = "store/splash-logo.png"   # the icon's tile, cut from store/logo.svg (360 px = 120 pt at 3x)
+splash_logo_size = "120"
+
+[env]
+dev = "http://movieplz.test/app.ham"
+# staging = "https://staging.example.com/app"
+prod = "https://movieplz.hypeapps.dev/app.ham"
+
+[ios]
+team  = "3UZ67ZRK4R"
+icon  = "store/icon.png"
+splash_color = "#F00709"   # the icon tile's edge red (ΔE00 ≤ 1.45 along it), so the tile melts into the screen
+
+[android]
+icon  = "store/icon.png"
+notification_icon = "store/android/notification_icon.png"   # white on transparent, 96×96
+
+# Firebase for Android notifications (project movieplz-6ac04). api_key is a
+# public client identifier, not a secret: secrets go in the environment.
+[android.firebase]
+app_id = "1:677609034987:android:34232bd25f52b8796c9aae"
+project_id = "movieplz-6ac04"
+messaging_sender_id = "677609034987"
+api_key = "AIzaSyC2SyD-vFjhypJ2EGsR5zymGGBi5ALC3T8"
+
+# The player binary links these SDKs; MoviePlz itself never asks for them.
+[permissions]
+face_id    = "MoviePlz does not use Face ID."
+camera     = "MoviePlz does not use the camera."
+microphone = "MoviePlz does not use the microphone."
+location   = "MoviePlz does not use your location."
+photos     = "MoviePlz does not read your photos."
+photos_add = "MoviePlz does not save to your photos."

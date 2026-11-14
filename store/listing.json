@@ -1,0 +1,10 @@
+{
+  "en-US": {
+    "title": "MoviePlz",
+    "subtitle": "Movie suggestions for friends",
+    "description": "MoviePlz is a private way for friends to suggest movies and shows to each other.\n\nKeep a list of everything you've watched, invite your friends with a five-digit code, and let them browse your list and suggest what you should watch next. No accounts, no passwords, no social feed: just you and the people you invite.\n\nFOR THE PERSON WITH THE LIST\n• Start your list in seconds: type your name and you're in.\n• Add what you've seen from a Google Sheet (it stays in sync) or paste a few titles.\n• Every title gets its poster and story automatically.\n• Get a notification when a friend suggests something.\n• Answer with \"I'll watch it\" to put it on your Up next list, \"Saw it!\" when you have, or \"Not for me\".\n\nFOR FRIENDS\n• Join with the code your friend reads you. No sign-up.\n• Browse and search everything they've seen, by films or series.\n• Suggest something new, with a note if you like.\n• Get notified when they're up for it, and again when they've seen it.\n\nPRIVATE BY DESIGN\n• Invite codes work once and expire after ten minutes.\n• Remove anyone's access in one tap.\n• Leave a list, or delete yours, right from the app. Your name and suggestions go with it.\n\nPosters and descriptions come from The Movie Database (TMDB). This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "keywords": "movies,shows,watchlist,suggest,recommend,friends,watch next,film list,series,tv,invite,list",
+    "promo": "Suggest movies and shows to friends, and keep a list of everything you've seen, with posters and stories for every title.",
+    "short": "Suggest movies and shows to a friend, and see what they think."
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "privacy_url": "https://movieplz.hypeapps.dev/privacy",
+  "support_url": "https://movieplz.hypeapps.dev/support",
+  "marketing_url": "https://movieplz.hypeapps.dev/support",
+  "category": "ENTERTAINMENT",
+  "secondary_category": "LIFESTYLE",
+  "copyright": "2026 Fluency Software",
+  "age_rating": {
+    "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+    "contests": "NONE",
+    "gamblingSimulated": "NONE",
+    "gunsOrOtherWeapons": "NONE",
+    "horrorOrFearThemes": "NONE",
+    "matureOrSuggestiveThemes": "NONE",
+    "medicalOrTreatmentInformation": "NONE",
+    "profanityOrCrudeHumor": "NONE",
+    "sexualContentGraphicAndNudity": "NONE",
+    "sexualContentOrNudity": "NONE",
+    "violenceCartoonOrFantasy": "NONE",
+    "violenceRealistic": "NONE",
+    "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+    "advertising": false,
+    "ageAssurance": false,
+    "gambling": false,
+    "healthOrWellnessTopics": false,
+    "lootBox": false,
+    "messagingAndChat": false,
+    "parentalControls": false,
+    "unrestrictedWebAccess": false,
+    "userGeneratedContent": true
+  },
+  "price": "free",
+  "availability": "all",
+  "third_party_content": true,
+  "review": {
+    "demo_required": false
+  }
+}

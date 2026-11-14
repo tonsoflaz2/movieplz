@@ -1,0 +1,24 @@
+# Changes here need the maintainer's review before they can merge
+# (branch protection: "Require review from Code Owners").
+# A merge to main deploys to production, so these are the paths that can
+# change data, secrets handling, routes or the deploy itself.
+
+/database/              @tonsoflaz2
+/config/                @tonsoflaz2
+/routes/                @tonsoflaz2
+/bootstrap/             @tonsoflaz2
+/app/Console/           @tonsoflaz2
+/app/Services/          @tonsoflaz2
+/app/Providers/         @tonsoflaz2
+/composer.json          @tonsoflaz2
+/composer.lock          @tonsoflaz2
+/package.json           @tonsoflaz2
+/artisan                @tonsoflaz2
+/public/                @tonsoflaz2
+/hype.toml              @tonsoflaz2
+/store/                 @tonsoflaz2
+/.github/               @tonsoflaz2
+/.gitignore             @tonsoflaz2
+/tests/Feature/PublicTreeTest.php @tonsoflaz2
+/docs/deploy.md         @tonsoflaz2
+/tests/Feature/DeployHealthTest.php @tonsoflaz2

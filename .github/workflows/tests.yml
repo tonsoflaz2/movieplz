@@ -1,0 +1,45 @@
+name: Tests
+
+# Runs the suite on every pull request and on main. It gets no secrets and
+# a read-only token: every outside service is faked (Http::fake, in-memory
+# SQLite), so a pull request from a fork runs exactly as one from here.
+# Use pull_request, never pull_request_target: the latter runs fork code
+# with this repository's secrets and write access.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sqlite3, curl, mbstring, openssl, sodium
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Prepare the environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run the tests
+        run: php artisan test
