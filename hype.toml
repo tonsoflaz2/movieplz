@@ -25,8 +25,17 @@ splash_color = "#F00709"   # the icon tile's edge red (ΔE00 ≤ 1.45 along it),
 icon  = "store/icon.png"
 notification_icon = "store/android/notification_icon.png"   # white on transparent, 96×96
 
-# Firebase for Android notifications (project movieplz-6ac04). api_key is a
-# public client identifier, not a secret: secrets go in the environment.
+# Firebase for Android notifications (project movieplz-6ac04).
+#
+# Why this api_key is public: a Firebase Android API key is a client
+# identifier, not a password. It is built into every copy of the app on
+# Google Play, so anyone could read it from the download anyway. It gives no
+# access to data on its own. In Google Cloud it is restricted to this app
+# (package com.hypeapps.movieplz, signed with our keys) and to the two APIs
+# notifications need (Firebase Cloud Messaging, Firebase Installations).
+#
+# Real secrets (the FCM service account, the APNs key, the TMDB key, the
+# database) live only in the server's environment, never in this repo.
 [android.firebase]
 app_id = "1:677609034987:android:34232bd25f52b8796c9aae"
 project_id = "movieplz-6ac04"
