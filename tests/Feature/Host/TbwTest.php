@@ -110,10 +110,10 @@ class TbwTest extends TestCase
         LibraryItem::factory()->create(['host_id' => $other->id, 'title' => 'Not Mine', 'origin' => 'app', 'in_collection' => false]);
 
         $this->asHost()->get('/app.ham')->assertSee('action="navigate:/host/tbw.ham"', false)
-            ->assertSee('TBW · 3')->assertSee('1 new · 1 up next · 1 seen, not in your collection');
+            ->assertSee('TBW · 3')->assertSee('1 new · 1 in progress · 1 added, not in your collection');
 
         $this->asHost()->get('/host/tbw.ham')->assertOk()
-            ->assertSeeInOrder(['New · 1', 'Arrival', 'Up next · 1', 'Dune', 'Seen, not in your collection yet · 1', 'Heat', 'Suggested by Sam'])
+            ->assertSeeInOrder(['New · 1', 'Arrival', 'In progress · 1', 'Dune', 'Added, not in your collection yet · 1', 'Heat', 'Suggested by Sam'])
             ->assertSee('Add to my collection')
             ->assertDontSee('Alien')
             ->assertDontSee('Not Mine');
@@ -124,7 +124,7 @@ class TbwTest extends TestCase
         $this->sawIt($this->suggest('Heat', 1995));
 
         $this->withSession(['client_id' => $this->sam->id])->get('/host/tbw.ham')
-            ->assertSee('Not authorized')->assertDontSee('Seen, not in your collection');
+            ->assertSee('Not authorized')->assertDontSee('Added, not in your collection');
         $item = LibraryItem::sole();
         $this->withSession(['client_id' => $this->sam->id])->post("/host/library/{$item->id}/keep")->assertSee('Not authorized');
         $this->assertFalse($item->fresh()->in_collection);
@@ -135,7 +135,7 @@ class TbwTest extends TestCase
         $this->sawIt($this->suggest('Heat', 1995));
 
         $this->withSession(['client_id' => $this->sam->id])->get('/library.ham')->assertSee('Heat');
-        $this->withSession(['client_id' => $this->sam->id])->get('/requests.ham')->assertSee('Heat')->assertSee('Seen');
+        $this->withSession(['client_id' => $this->sam->id])->get('/requests.ham')->assertSee('Heat')->assertSee('Added');
     }
 
     // ── Keep and remove ─────────────────────────────────────────────────
@@ -318,7 +318,7 @@ class TbwTest extends TestCase
         $this->asHost()->get("/host/requests/{$suggestion->id}/edit.ham")->assertOk()->assertSee("Edit Sam's suggestion");
 
         $this->asHost()->post("/host/requests/{$suggestion->id}/edit", ['title' => 'Arrival', 'year' => '2016', 'type' => 'film'])
-            ->assertOk()->assertSee('id="request-'.$suggestion->id.'"', false)->assertSee('Arrival')->assertSee("I'll watch it", false);
+            ->assertOk()->assertSee('id="request-'.$suggestion->id.'"', false)->assertSee('Arrival')->assertSee('In progress', false);
 
         $suggestion->refresh();
         $this->assertSame(['Arrival', 2016, 'film'], [$suggestion->title, $suggestion->year, $suggestion->type]);

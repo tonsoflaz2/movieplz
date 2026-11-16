@@ -7,7 +7,7 @@ use App\Models\MediaRequest;
 
 /**
  * TBW: everything friends have asked a host to watch. New suggestions,
- * Up next, and titles the host has seen that were added in the app and
+ * In progress, and titles the host added through a suggestion in the app that
  * aren't in their collection yet.
  */
 class Tbw

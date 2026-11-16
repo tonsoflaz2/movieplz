@@ -1,6 +1,6 @@
 {{--
-    A title in TBW's "Seen, not in your collection yet": seen through a
-    suggestion and added in the app. Edit · Add to my collection · Remove.
+    A title in TBW's "Added, not in your collection yet": added in the app
+    through a suggestion. Edit · Add to my collection · Remove.
 
     The list's row, and the answer to keep, edit (when done), match and
     view (?in=row), swapped over #tbw-item-{id}. Once kept, it stays in
@@ -27,7 +27,7 @@
             <p style="font-base font-bold">{{ $item->title }}</p>
             <p style="text-red-100 font-sm mt-2">{{ ucfirst($item->type) }}{{ $item->year ? ' · '.$item->year : '' }}</p>
             <p style="text-red-100 font-xs mt-2">
-                {{ $from !== '' ? 'Suggested by '.$from.' · ' : '' }}seen {{ $seenAt->lt(now()->subMinute()) ? $seenAt->diffForHumans() : 'just now' }}
+                {{ $from !== '' ? 'Suggested by '.$from.' · ' : '' }}added {{ $seenAt->lt(now()->subMinute()) ? $seenAt->diffForHumans() : 'just now' }}
             </p>
         </block>
     </flex>
@@ -62,7 +62,7 @@
                 </inline-content>
             </block>
             <block @@show="$removing" style="mt-5">
-                <p style="text-white font-sm mb-8">Remove {{ $item->title }} from your library? The suggestion still says you saw it.</p>
+                <p style="text-white font-sm mb-8">Remove {{ $item->title }} from your library? The suggestion stays marked added.</p>
                 <inline-content spacing="8 8">
                     <button
                         action="/host/library/{{ $item->id }}/remove"

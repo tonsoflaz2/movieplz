@@ -34,24 +34,24 @@ class SuggestionFlowTest extends TestCase
         ]);
     }
 
-    public function test_ill_watch_it_puts_it_up_next(): void
+    public function test_in_progress_keeps_it_pending_and_up_next(): void
     {
         $s = $this->suggestion();
 
         $this->withSession(['client_id' => $this->me->id])
             ->post("/host/requests/{$s->id}/up-next")
             ->assertOk()
-            ->assertSee('Up next since', false)
-            ->assertSee('Saw it!', false)
-            ->assertDontSee("I'll watch it", false);
+            ->assertSee('In progress since', false)
+            ->assertSee('/fulfill"', false)
+            ->assertDontSee('/up-next"', false);
 
         $s->refresh();
         $this->assertSame('pending', $s->status);
         $this->assertNotNull($s->up_next_at);
-        $this->assertSame('Up next', $s->label());
+        $this->assertSame('In progress', $s->label());
     }
 
-    public function test_saw_it_puts_the_title_on_the_hosts_list(): void
+    public function test_added_puts_the_title_in_the_hosts_library(): void
     {
         $s = $this->suggestion(['up_next_at' => now()]);
 
@@ -60,10 +60,10 @@ class SuggestionFlowTest extends TestCase
         $item = LibraryItem::where('host_id', $this->host->id)->where('title', 'Paddington in Peru')->sole();
         $this->assertSame(2024, $item->year);
         $this->assertSame($item->id, $s->refresh()->fulfilled_library_item_id);
-        $this->assertSame('Seen', $s->label());
+        $this->assertSame('Added', $s->label());
     }
 
-    public function test_saw_it_reuses_a_title_already_on_the_list(): void
+    public function test_added_reuses_a_title_already_in_the_library(): void
     {
         LibraryItem::factory()->create(['host_id' => $this->host->id, 'title' => 'Paddington in Peru', 'year' => 2024, 'type' => 'film']);
         $s = $this->suggestion();
@@ -73,19 +73,19 @@ class SuggestionFlowTest extends TestCase
         $this->assertSame(1, LibraryItem::where('host_id', $this->host->id)->count());
     }
 
-    public function test_not_for_me_shows_as_passed(): void
+    public function test_declined_shows_as_declined(): void
     {
         $s = $this->suggestion();
 
         $this->withSession(['client_id' => $this->me->id])
             ->post("/host/requests/{$s->id}/decline")
             ->assertOk()
-            ->assertSee('Passed', false);
+            ->assertSee('Declined', false);
 
-        $this->assertSame('Passed', $s->refresh()->label());
+        $this->assertSame('Declined', $s->refresh()->label());
     }
 
-    public function test_up_next_is_not_counted_as_new(): void
+    public function test_in_progress_is_not_counted_as_new(): void
     {
         $this->suggestion();
         $this->suggestion(['title' => 'Heat', 'up_next_at' => now()]);
@@ -100,18 +100,20 @@ class SuggestionFlowTest extends TestCase
             ->assertDontSee('Paddington in Peru', false);
     }
 
-    public function test_friend_sees_up_next_and_seen(): void
+    public function test_friend_sees_in_progress_and_added(): void
     {
         $this->suggestion(['up_next_at' => now()]);
-        $this->suggestion(['title' => 'Heat', 'status' => 'fulfilled', 'fulfilled_at' => now()]);
+        $item = LibraryItem::factory()->create(['host_id' => $this->host->id, 'title' => 'Heat']);
+        $this->suggestion(['title' => 'Heat', 'status' => 'fulfilled', 'fulfilled_at' => now(), 'fulfilled_library_item_id' => $item->id]);
 
         $this->withSession(['client_id' => $this->friend->id])
             ->get('/requests.ham')
-            ->assertSee('Up next (1)', false)
-            ->assertSee('Seen (1)', false);
+            ->assertSee('In progress (1)', false)
+            ->assertSee('Added (1)', false)
+            ->assertSee('in the library', false);
     }
 
-    public function test_friend_is_told_when_the_host_is_up_for_it_and_when_they_saw_it(): void
+    public function test_friend_is_told_when_its_in_progress_and_when_its_added(): void
     {
         $this->friend->forceFill(['push_token' => str_repeat('0', 64), 'push_platform' => 'ios'])->save();
         config(['apns.key_path' => 'nonexistent.p8']); // PushService logs and gives up; we only check it was asked

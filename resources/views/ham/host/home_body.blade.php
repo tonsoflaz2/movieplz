@@ -64,7 +64,7 @@
             @if ($tbw['total'] === 0)
                 Everything friends ask you to watch shows up here.
             @else
-                {{ $tbw['new'] }} new · {{ $tbw['up_next'] }} up next · {{ $tbw['seen'] }} seen, not in your collection
+                {{ $tbw['new'] }} new · {{ $tbw['up_next'] }} in progress · {{ $tbw['seen'] }} added, not in your collection
             @endif
         </p>
     </block>

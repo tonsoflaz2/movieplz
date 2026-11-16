@@ -25,7 +25,7 @@
 </ul>
 
 <h2>Suggestions</h2>
-<p>Friends suggest a title; the host answers <em>I'll watch it</em> (it goes on their Up next list), <em>Saw it!</em> (it joins their list) or <em>Not for me</em>. Friends get a notification as it moves along.</p>
+<p>Friends suggest a title; the host answers <em>In progress</em>, <em>Added</em> (it joins their library, unless they untick <em>Add to library?</em>) or <em>Declined</em>, and can write a reply. Friends get a notification as it moves along.</p>
 
 <h2>Leaving or deleting</h2>
 <p>Friends can tap <em>Leave this library</em> at the bottom of their home screen; hosts can tap <em>Delete my library</em> on their dashboard. See the <a href="/privacy">privacy policy</a> for what's deleted.</p>

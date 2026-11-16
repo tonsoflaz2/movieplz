@@ -25,8 +25,8 @@ use Illuminate\Validation\Rule;
  * the app's: the sheet isn't written, and sync goes by the sheet's own
  * spelling, so it neither duplicates nor undoes it.
  *
- * Pending suggestions (TBW's New and Up next) are edited in their row: the
- * same fields, no poster (they have none until "Saw it!").
+ * Pending suggestions (TBW's New and In progress) are edited in their row: the
+ * same fields, no poster (they have none until "Added").
  */
 class TitleEditController extends Controller
 {

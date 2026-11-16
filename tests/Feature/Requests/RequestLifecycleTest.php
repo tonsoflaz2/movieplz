@@ -67,7 +67,7 @@ class RequestLifecycleTest extends TestCase
             ->post("/host/requests/{$req->id}/fulfill");
 
         $response->assertOk();
-        $response->assertSee('on your list', false);
+        $response->assertSee('in your library', false);
 
         $fresh = $req->fresh();
         $this->assertSame('fulfilled', $fresh->status);
