@@ -1,7 +1,9 @@
 {{--
     A title page's poster, name and description, as one box (#title-{id})
     the host's Edit swaps in place (?in=page): the edit form, the TMDB
-    matches, then this box again with the saved title.
+    matches, then this box again with the saved title. The host's Delete
+    asks first, then swaps in _title_deleted; a title from the linked
+    Google Sheet has no Delete, only a note on how it leaves.
 
     Variables:
       $item           — LibraryItem
@@ -29,6 +31,8 @@
         @endif
 
         @if ($current_client?->isHost())
+            @php($deletable = $item->canBeDeletedBy($item->host))
+            <block var-deleting="false">
             <inline-content spacing="8 8" style="mb-10">
                 <button
                     action="/host/library/{{ $item->id }}/edit.ham?in=page"
@@ -47,7 +51,40 @@
                         Add to my collection
                     </button>
                 @endif
+                @if ($deletable)
+                    <button @click="$deleting = true" style="plain #FECACA sm">
+                        Delete
+                    </button>
+                @endif
             </inline-content>
+            @if ($deletable)
+                <block @@show="$deleting" style="bg-black bg-opacity-15 p-10 rounded mb-10">
+                    <p style="text-white font-sm mb-8">Delete {{ $item->title }} from your library? Friends won't see it anymore. This can't be undone.</p>
+                    <inline-content spacing="8 8">
+                        <button
+                            action="/host/library/{{ $item->id }}/delete"
+                            method="POST"
+                            target="#title-{{ $item->id }}"
+                            swap="outer"
+                            style="filled #1F2937 sm">
+                            Yes, delete
+                        </button>
+                        <button @click="$deleting = false" style="outlined #FECACA sm">
+                            Cancel
+                        </button>
+                    </inline-content>
+                </block>
+            @else
+                <p style="text-red-100 font-xs mb-10">
+                    This title comes from your Google Sheet.
+                    @if ($item->host->library_mirror)
+                        Take it out of the sheet and it leaves MoviePlz on the next sync.
+                    @else
+                        To delete it, take it out of the sheet and turn on "My sheet is my whole library" under Add titles.
+                    @endif
+                </p>
+            @endif
+            </block>
             @if ($item->isAwaitingKeep())
                 <p style="text-red-100 font-xs mb-10">Added in the app from a suggestion; not in your collection yet.</p>
             @endif

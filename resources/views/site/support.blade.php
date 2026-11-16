@@ -28,6 +28,9 @@
 <h2>Suggestions</h2>
 <p>Friends suggest a title; the host answers <em>In progress</em>, <em>Added</em> (it joins their library, unless they untick <em>Add to library?</em>) or <em>Declined</em>, and can write a reply. Friends get a notification as it moves along.</p>
 
+<h2>Deleting a title</h2>
+<p>Hosts can open a title in their library and tap <em>Delete</em>. A title that comes from a linked Google Sheet leaves by being taken out of the sheet instead, with <em>My sheet is my whole library</em> turned on.</p>
+
 <h2>Leaving or deleting</h2>
 <p>Friends can tap <em>Leave this library</em> at the bottom of their home screen; hosts can tap <em>Delete my library</em> on their dashboard. See the <a href="/privacy">privacy policy</a> for what's deleted.</p>
 
