@@ -138,6 +138,22 @@ class TitleEditController extends Controller
         return $this->suggestionRow($suggestion);
     }
 
+    /**
+     * POST /host/library/{id}/delete — take a title out of the library, from
+     * its page. A suggestion that had added it stays "Added" (the foreign
+     * key clears its link). A title from the linked sheet can't be deleted
+     * here; the page explains how instead.
+     */
+    public function destroy(Request $request, int $id)
+    {
+        $item = $this->item($request, $id);
+        abort_unless($item->canBeDeletedBy($item->host), 404);
+        $title = $item->title;
+        $item->delete();
+
+        return $this->ham('ham.host.partials._title_deleted', ['id' => $id, 'title' => $title]);
+    }
+
     /** GET /host/requests/{id}/row.ham — the suggestion's row again (Cancel). */
     public function suggestionRowView(Request $request, int $id)
     {

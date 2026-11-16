@@ -66,6 +66,16 @@ class LibraryItem extends Model
     }
 
     /**
+     * Whether the host can delete it in the app. A title that came from the
+     * host's linked Google Sheet can't: the next sync would only add it back.
+     * It leaves by being taken out of the sheet (with mirror mode on).
+     */
+    public function canBeDeletedBy(Host $host): bool
+    {
+        return ! ($this->origin === self::ORIGIN_SHEET && $host->library_sheet_url);
+    }
+
+    /**
      * The poster at a TMDB size: w185 for list rows (a w500 is ~5x the
      * bytes and kept rows blank for seconds), w780 for the title page.
      * Posters are stored at w500.

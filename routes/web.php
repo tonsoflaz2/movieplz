@@ -162,6 +162,7 @@ Route::middleware('host.required')->prefix('host')->group(function () {
     Route::get('/library/{id}/matches.ham', [HostTitleEditController::class, 'matchList']);
     Route::post('/library/{id}/match', [HostTitleEditController::class, 'match']);
     Route::get('/library/{id}/view.ham', [HostTitleEditController::class, 'view']);
+    Route::post('/library/{id}/delete', [HostTitleEditController::class, 'destroy']);
     Route::get('/requests/{id}/edit.ham', [HostTitleEditController::class, 'suggestionForm']);
     Route::post('/requests/{id}/edit', [HostTitleEditController::class, 'updateSuggestion']);
     Route::get('/requests/{id}/row.ham', [HostTitleEditController::class, 'suggestionRowView']);
