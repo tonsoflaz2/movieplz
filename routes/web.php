@@ -144,6 +144,7 @@ Route::middleware('host.required')->prefix('host')->group(function () {
     Route::get('/library-source.ham', [HostLibrarySourceController::class, 'show']);
     Route::post('/library-source', [HostLibrarySourceController::class, 'link']);
     Route::post('/library-sync', [HostLibrarySourceController::class, 'sync']);
+    Route::post('/library-mirror', [HostLibrarySourceController::class, 'mirror']);
     Route::post('/library-paste', [HostLibrarySourceController::class, 'paste']);
 
     Route::post('/delete-library', [AccountController::class, 'deleteLibrary']);

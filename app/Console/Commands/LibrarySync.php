@@ -25,13 +25,15 @@ class LibrarySync extends Command
 
         $failed = 0;
         foreach ($hosts as $host) {
-            $new = LibrarySource::sync($host);
-            if ($new === null) {
+            $report = LibrarySource::syncReport($host);
+            if ($report === null) {
                 $failed++;
                 $this->warn("Host {$host->id}: sheet could not be read.");
                 continue;
             }
-            $this->info("Host {$host->id}: {$new} new titles.");
+            $this->info("Host {$host->id}: {$report['new']} new titles"
+                .($host->library_mirror ? ", {$report['removed']} removed" : '')
+                .($report['held'] ? ", {$report['held']} removals held back" : '').'.');
         }
 
         return $failed === $hosts->count() ? 1 : 0;

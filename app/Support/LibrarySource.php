@@ -12,12 +12,24 @@ use Illuminate\Support\Facades\Log;
  * Where a host's library comes from: a public Google Sheet (synced on a
  * schedule and on demand) or titles pasted in by hand.
  *
+ * In mirror mode (hosts.library_mirror) the sheet is the whole library: a
+ * sync also removes the sheet's titles that the sheet no longer lists.
+ * Titles added in the app (through a suggestion) or pasted always stay.
+ *
  * A sheet needs a Title column; Type (film/series) and Year are optional.
  * Columns are found by their header, so any order works. Without a
  * recognisable header the first column is the title.
  */
 class LibrarySource
 {
+    /**
+     * A mirror sync holds back its removals when the sheet comes back empty,
+     * or would lose more than half of its titles once it has at least this
+     * many: more likely a bad read or a wrong tab than a real clear-out. The
+     * host can remove them anyway from the Add titles screen.
+     */
+    public const MIRROR_GUARD_MIN = 20;
+
     /**
      * The CSV export URL for a Google Sheets link, or null if the link
      * isn't a Google Sheet. Accepts the share link (…/d/{id}/edit#gid=N)
@@ -129,8 +141,8 @@ class LibrarySource
 
     /**
      * Add or update the rows in the host's collection ([origin]: sheet or
-     * paste). Returns how many titles were new. Nothing is removed: a title
-     * the sheet drops stays until the host deletes it.
+     * paste). Returns how many titles were new. Nothing is removed here;
+     * see removeMissing() for mirror mode.
      *
      * A row is matched by the sheet's own spelling (source_title/year), so a
      * title the host renamed in the app keeps its new name and isn't added
@@ -195,9 +207,22 @@ class LibrarySource
     }
 
     /**
-     * Sync a host from its sheet. Null when the sheet can't be read.
+     * Sync a host from its sheet. Returns how many titles were new; null
+     * when the sheet can't be read.
      */
     public static function sync(Host $host): ?int
+    {
+        return self::syncReport($host)['new'] ?? null;
+    }
+
+    /**
+     * Sync a host from its sheet: new titles, and in mirror mode the removal
+     * of titles the sheet dropped. [force] removes them even when the guard
+     * would hold them back. Null when the sheet can't be read.
+     *
+     * @return array{new: int, removed: int, held: int}|null
+     */
+    public static function syncReport(Host $host, bool $force = false): ?array
     {
         if (! $host->library_sheet_url) {
             return null;
@@ -208,10 +233,55 @@ class LibrarySource
             return null;
         }
 
-        $new = self::import($host, $rows);
-        $host->forceFill(['library_synced_at' => now()])->save();
+        $report = ['new' => self::import($host, $rows), 'removed' => 0, 'held' => 0];
+        if ($host->library_mirror) {
+            [$report['removed'], $report['held']] = self::removeMissing($host, $rows, $force);
+        }
+        $host->forceFill([
+            'library_synced_at' => now(),
+            'library_mirror_held' => $report['held'] ?: null,
+        ])->save();
 
-        return $new;
+        return $report;
+    }
+
+    /**
+     * Mirror mode: remove the host's sheet titles that [rows] (the sheet as
+     * just read) no longer lists, matched by the sheet's own spelling like
+     * import(). Titles added in the app or pasted are never touched. A
+     * suggestion that had added one keeps its "Added" status.
+     *
+     * @return array{0: int, 1: int} [removed, held back by the guard]
+     */
+    public static function removeMissing(Host $host, array $rows, bool $force = false): array
+    {
+        $listed = [];
+        foreach ($rows as $row) {
+            $listed[$row['title']."\0".$row['year']] = true;
+        }
+
+        $sheetItems = LibraryItem::query()->where('host_id', $host->id)
+            ->where('origin', LibraryItem::ORIGIN_SHEET)
+            ->get(['id', 'source_title', 'source_year']);
+        $missing = $sheetItems->reject(fn ($i) => isset($listed[$i->source_title."\0".$i->source_year]));
+
+        if ($missing->isEmpty()) {
+            return [0, 0];
+        }
+
+        $suspicious = $rows === []
+            || ($sheetItems->count() >= self::MIRROR_GUARD_MIN && $missing->count() * 2 > $sheetItems->count());
+        if ($suspicious && ! $force) {
+            Log::warning('Library mirror held back removals', [
+                'host' => $host->id, 'missing' => $missing->count(), 'sheet_titles' => $sheetItems->count(), 'rows' => count($rows),
+            ]);
+
+            return [0, $missing->count()];
+        }
+
+        LibraryItem::query()->whereIn('id', $missing->pluck('id'))->delete();
+
+        return [$missing->count(), 0];
     }
 
     private static function row(string $title, ?string $type, ?string $year): ?array

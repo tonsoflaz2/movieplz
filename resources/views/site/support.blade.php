@@ -22,6 +22,7 @@
     <li>Put <em>Title</em> in the first row (<em>Type</em> and <em>Year</em> are optional: type is film or series).</li>
     <li>In Google Sheets, choose <em>Share</em>, set General access to <em>Anyone with the link</em> (Viewer), and copy the link. You don't need to publish it to the web.</li>
     <li>Paste the link in MoviePlz under <em>Add titles</em>. New rows show up within a few minutes.</li>
+    <li>To make the sheet your whole library, turn on <em>My sheet is my whole library</em> under <em>Add titles</em>. A title you take out of the sheet then leaves MoviePlz within a few minutes too. Titles added through a suggestion or pasted stay.</li>
 </ul>
 
 <h2>Suggestions</h2>

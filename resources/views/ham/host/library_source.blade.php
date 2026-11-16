@@ -109,6 +109,51 @@
                 Last checked {{ $host->library_synced_at->lt(now()->subMinute()) ? $host->library_synced_at->diffForHumans() : 'just now' }}.
             </p>
         @endif
+
+        {{-- Mirror mode: the sheet is the whole library. Two buttons rather
+             than a switch, so the URL says what happens. --}}
+        <block style="bg-black bg-opacity-15 p-10 rounded mt-15">
+            <row spacing="8">
+                <icon name="{{ $host->library_mirror ? 'sync' : 'sync_disabled' }} white"></icon>
+                <p style="text-white font-sm font-bold">My sheet is my whole library: {{ $host->library_mirror ? 'on' : 'off' }}</p>
+            </row>
+            <p style="text-red-100 font-xs mt-5 mb-10">
+                @if ($host->library_mirror)
+                    A title you take out of your sheet leaves MoviePlz on the next sync. Titles you added through a suggestion or pasted stay.
+                @else
+                    Turn this on and a title you take out of your sheet leaves MoviePlz too. Titles you added through a suggestion or pasted stay.
+                @endif
+            </p>
+            @if ($host->library_mirror)
+                <button action="/host/library-mirror?on=0" method="POST" target="#library-source" swap="outer"
+                        style="outlined #FECACA sm">
+                    Turn off
+                </button>
+            @else
+                <button action="/host/library-mirror?on=1" method="POST" target="#library-source" swap="outer"
+                        confirm="Titles that aren't in your sheet anymore will be removed from MoviePlz. Titles added through suggestions or pasted stay."
+                        confirm-label="Turn on"
+                        style="filled #1F2937 sm">
+                    Turn on
+                </button>
+            @endif
+
+            @if ($host->library_mirror && $host->library_mirror_held)
+                <block style="bg-black bg-opacity-15 p-10 rounded mt-10">
+                    <p style="text-white font-sm mb-5">
+                        {{ $host->library_mirror_held }} {{ Str::plural('title', $host->library_mirror_held) }} weren't removed:
+                        your sheet suddenly looked much smaller, which is more often a wrong tab or a bad read than a real clear-out.
+                        Check the sheet, then remove them if it's right.
+                    </p>
+                    <button action="/host/library-sync?force=1" method="POST" target="#library-source" swap="outer"
+                            confirm="Remove {{ $host->library_mirror_held }} {{ Str::plural('title', $host->library_mirror_held) }} from MoviePlz?"
+                            confirm-label="Remove"
+                            style="outlined #FECACA sm">
+                        Remove them anyway
+                    </button>
+                </block>
+            @endif
+        </block>
     </block>
 
     {{-- Paste a list --}}
