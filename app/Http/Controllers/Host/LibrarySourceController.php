@@ -9,8 +9,9 @@ use Illuminate\Http\Request;
 
 /**
  * The host's Library source screen: link a public Google Sheet (synced
- * now and every few minutes after), sync it on demand, or paste titles.
- * Every action answers with the whole screen, swapped over #library-source.
+ * now and every few minutes after), sync it on demand, turn mirror mode
+ * on or off, or paste titles. Every action answers with the whole screen,
+ * swapped over #library-source.
  */
 class LibrarySourceController extends Controller
 {
@@ -57,19 +58,49 @@ class LibrarySourceController extends Controller
     }
 
     /**
-     * POST /host/library-sync — sync the linked sheet now.
+     * POST /host/library-sync — sync the linked sheet now. ?force=1 is
+     * "Remove them anyway": removals the mirror guard held back go ahead.
      */
     public function sync(Request $request)
     {
         $host = $this->host($request);
-        $new = LibrarySource::sync($host);
-        if ($new) {
+        $report = LibrarySource::syncReport($host, force: $request->query('force') === '1');
+        if ($report['new'] ?? 0) {
             LibrarySource::enrichSoon($host);
         }
 
-        return $new === null
+        return $report === null
             ? $this->screen($request, error: "Couldn't read your sheet. Check it's still shared with \"Anyone with the link\".")
-            : $this->screen($request, notice: $this->added($new));
+            : $this->screen($request, notice: $this->synced($report));
+    }
+
+    /**
+     * POST /host/library-mirror?on=1|0 — "My sheet is my whole library" on
+     * or off. Turning it on syncs straight away, so titles the sheet no
+     * longer lists leave now.
+     */
+    public function mirror(Request $request)
+    {
+        $host = $this->host($request);
+        $on = $request->query('on') === '1';
+        $host->forceFill(['library_mirror' => $on] + ($on ? [] : ['library_mirror_held' => null]))->save();
+
+        if (! $on) {
+            return $this->screen($request, notice: 'Mirror mode is off. Titles stay when your sheet drops them.');
+        }
+        if (! $host->library_sheet_url) {
+            return $this->screen($request, notice: 'Mirror mode is on. It starts once you link a sheet.');
+        }
+
+        $report = LibrarySource::syncReport($host);
+        if ($report === null) {
+            return $this->screen($request, error: "Mirror mode is on, but your sheet couldn't be read just now. Check it's still shared with \"Anyone with the link\".");
+        }
+        if ($report['new']) {
+            LibrarySource::enrichSoon($host);
+        }
+
+        return $this->screen($request, notice: 'Mirror mode is on. '.$this->synced($report));
     }
 
     /**
@@ -97,6 +128,20 @@ class LibrarySourceController extends Controller
         $client = $request->attributes->get('current_client');
 
         return $client->host;
+    }
+
+    /** @param array{new: int, removed: int, held: int} $report */
+    private function synced(array $report): string
+    {
+        $parts = [$report['new'] === 1 ? '1 new title' : "{$report['new']} new titles"];
+        if ($report['removed']) {
+            $parts[] = $report['removed'] === 1 ? '1 removed' : "{$report['removed']} removed";
+        }
+        if (! $report['removed'] && ! $report['new']) {
+            return 'Up to date: no changes.';
+        }
+
+        return 'Synced: '.implode(', ', $parts).'.';
     }
 
     private function added(int $new): string

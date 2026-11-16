@@ -12,7 +12,11 @@ class Host extends Model
 
     protected $fillable = ['name', 'library_sheet_url'];
 
-    protected $casts = ['library_synced_at' => 'datetime'];
+    protected $casts = [
+        'library_synced_at' => 'datetime',
+        'library_mirror' => 'boolean',
+        'library_mirror_held' => 'integer',
+    ];
 
     public function clients(): HasMany
     {
