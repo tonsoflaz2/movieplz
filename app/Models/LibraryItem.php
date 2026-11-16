@@ -48,7 +48,7 @@ class LibraryItem extends Model
         return $this->belongsTo(Host::class);
     }
 
-    /** The suggestions that put this title on the list ("Saw it!"). */
+    /** The suggestions that put this title in the library ("Added"). */
     public function suggestions(): HasMany
     {
         return $this->hasMany(MediaRequest::class, 'fulfilled_library_item_id');

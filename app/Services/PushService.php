@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 class PushService
 {
     /**
-     * Tell one person about [event] ('saw-it', 'up-for-it', 'new-suggestion'):
+     * Tell one person about [event] ('up-for-it', 'saw-it', 'added', 'declined', 'new-suggestion'):
      * pushed when they can be (a token, connected, not revoked). Either way
      * it's one INFO line in the log, so "why didn't I get it?" has an
      * answer: skipped and why, or what Apple or Firebase said.
@@ -83,7 +83,8 @@ class PushService
     {
         $payload = json_encode([
             'aps' => [
-                'alert' => ['title' => $title, 'body' => $body],
+                // A title-only notification leaves the body out.
+                'alert' => ['title' => $title] + ($body === '' ? [] : ['body' => $body]),
                 'sound' => 'default',
             ],
             'data' => $data,

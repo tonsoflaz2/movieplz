@@ -3,10 +3,10 @@
     have asked this host to watch, by status.
 
       New       — suggestions not answered yet (the inbox's rows, with Edit)
-      Up next   — "I'll watch it"
-      Seen      — titles seen through a suggestion that were added in the
-                  app and aren't in the collection yet: Edit · Add to my
-                  collection · Remove
+      In progress — "In progress"
+      Added       — titles added through a suggestion ("Added") that
+                    aren't in the collection yet: Edit · Add to my
+                    collection · Remove
 
     Variables:
       $new, $upNext — Collections of MediaRequest (client loaded)
@@ -32,16 +32,16 @@
     @endif
 
     @if ($upNext->isNotEmpty())
-        <p style="font-lg font-bold mt-10 mb-10">Up next · {{ $upNext->count() }}</p>
+        <p style="font-lg font-bold mt-10 mb-10">In progress · {{ $upNext->count() }}</p>
         @foreach ($upNext as $req)
             @include('ham.host.partials._request_row', ['request' => $req])
         @endforeach
     @endif
 
     @if ($seen->isNotEmpty())
-        <p style="font-lg font-bold mt-10 mb-5">Seen, not in your collection yet · {{ $seen->count() }}</p>
+        <p style="font-lg font-bold mt-10 mb-5">Added, not in your collection yet · {{ $seen->count() }}</p>
         <p style="text-red-100 font-sm mb-10">
-            You saw these through a suggestion, so they were added in the app. Fix the name if needed, then add them to your collection.
+            You added these through a suggestion, in the app. Fix the name if needed, then add them to your collection.
         </p>
         @foreach ($seen as $item)
             @include('ham.host.partials._tbw_item', ['item' => $item])

@@ -4,6 +4,7 @@
     Variables:
       $current_client — host Client
       $filter         — "new" | "up_next" | "seen" | "passed"
+                        (shown as New, In progress, Added, Declined)
       $requests       — Collection of MediaRequest (filtered)
 --}}
 <block style="p-20">
@@ -16,15 +17,15 @@
         </button>
         <button action="/host/requests.ham?status=up_next" target="#main" swap="inner"
                 style="{{ $filter === 'up_next' ? 'filled #1F2937' : 'outlined #FECACA' }} sm">
-            Up next
+            In progress
         </button>
         <button action="/host/requests.ham?status=seen" target="#main" swap="inner"
                 style="{{ $filter === 'seen' ? 'filled #1F2937' : 'outlined #FECACA' }} sm">
-            Seen
+            Added
         </button>
         <button action="/host/requests.ham?status=passed" target="#main" swap="inner"
                 style="{{ $filter === 'passed' ? 'filled #1F2937' : 'outlined #FECACA' }} sm">
-            Passed
+            Declined
         </button>
     </inline-content>
 
@@ -33,9 +34,9 @@
             <p style="text-red-100 font-base">
                 {{ [
                     'new' => 'No new suggestions.',
-                    'up_next' => "Nothing up next. Tap \"I'll watch it\" on a suggestion to save it here.",
-                    'seen' => 'Nothing marked seen yet.',
-                    'passed' => 'Nothing passed on.',
+                    'up_next' => 'Nothing in progress. Tap "In progress" on a suggestion to keep it here.',
+                    'seen' => 'Nothing added yet.',
+                    'passed' => 'Nothing declined.',
                 ][$filter] }}
             </p>
         </block>

@@ -51,7 +51,7 @@
         <p style="font-lg font-bold mb-5 mt-10">Your recent suggestions</p>
         @foreach ($recent_requests as $req)
             <list-tile
-                icon="{{ ['Seen' => 'check_circle', 'Passed' => 'do_not_disturb_on', 'Up next' => 'bookmark'][$req->label()] ?? 'schedule' }}"
+                icon="{{ ['Added' => 'check_circle', 'Declined' => 'do_not_disturb_on', 'In progress' => 'autorenew'][$req->label()] ?? 'schedule' }}"
                 subtitle="{{ $req->label() }}{{ $req->year ? ' · '.$req->year : '' }}">
                 {{ $req->title }}
             </list-tile>

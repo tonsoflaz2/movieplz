@@ -23,6 +23,7 @@ class MediaRequest extends Model
         'year',
         'type',
         'notes',
+        'host_reply',
         'status',
         'up_next_at',
         'fulfilled_at',
@@ -41,17 +42,24 @@ class MediaRequest extends Model
     public const STATUS_FULFILLED = 'fulfilled';
     public const STATUS_DECLINED = 'declined';
 
-    // How the app words a status: suggestions are things to watch. "Seen"
-    // (fulfilled) puts the title on the host's list; "Up next" is a pending
-    // suggestion the host has agreed to; a declined one is "Passed".
+    // How the app words a status. The host answers a suggestion with
+    // "In progress" (still pending, up_next_at set), "Added" (fulfilled;
+    // the title goes in the library unless "Add to library?" was unticked)
+    // or "Declined".
     public function label(): string
     {
         return match (true) {
-            $this->status === self::STATUS_FULFILLED => 'Seen',
-            $this->status === self::STATUS_DECLINED => 'Passed',
-            $this->up_next_at !== null => 'Up next',
+            $this->status === self::STATUS_FULFILLED => 'Added',
+            $this->status === self::STATUS_DECLINED => 'Declined',
+            $this->up_next_at !== null => 'In progress',
             default => 'Waiting',
         };
+    }
+
+    /** Added, with its title put in the library (the box was ticked, and the title is still there). */
+    public function wasAddedToLibrary(): bool
+    {
+        return $this->status === self::STATUS_FULFILLED && $this->fulfilled_library_item_id !== null;
     }
 
     /** Pending suggestions the host hasn't answered yet. */
@@ -60,7 +68,7 @@ class MediaRequest extends Model
         return $query->where('status', self::STATUS_PENDING)->whereNull('up_next_at');
     }
 
-    /** Pending suggestions the host said they'll watch. */
+    /** Pending suggestions the host marked In progress. */
     public function scopeUpNext($query)
     {
         return $query->where('status', self::STATUS_PENDING)->whereNotNull('up_next_at');

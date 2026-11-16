@@ -1,5 +1,5 @@
 {{--
-    Editing a pending suggestion (TBW's New and Up next, and the inbox),
+    Editing a pending suggestion (TBW's New and In progress, and the inbox),
     swapped over its row, #request-{id}. Saving answers with the row;
     the friend sees the corrected title in their suggestions.
 

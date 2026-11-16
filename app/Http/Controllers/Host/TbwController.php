@@ -10,8 +10,8 @@ use Illuminate\Http\Request;
 
 /**
  * TBW, the host's list of everything friends have asked them to watch:
- * new suggestions, Up next, and titles seen through a suggestion that were
- * added in the app and aren't in the collection yet. Those can be edited,
+ * new suggestions, In progress, and titles added in the app through a
+ * suggestion that aren't in the collection yet. Those can be edited,
  * kept ("Add to my collection") or removed from the library.
  */
 class TbwController extends Controller
