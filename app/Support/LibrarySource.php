@@ -74,14 +74,32 @@ class LibrarySource
         }
     }
 
+    /**
+     * The rows of a sheet's CSV export. Fields are read as CSV, so a quoted
+     * title with a comma ("Matrix, The") stays whole.
+     *
+     * Until 2026-11-17 lines were split on every comma, which cut such a
+     * title at its comma, lost its year and shifted the row's later columns.
+     * A row with a comma in it also carries legacy_title/legacy_year: what
+     * that parser made of it, so import() can repair the title it stored.
+     */
     public static function parseCsv(string $csv): array
     {
-        $lines = array_values(array_filter(str_getcsv($csv, "\n"), fn ($l) => trim($l) !== ''));
-        if (! $lines) {
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $csv);
+        rewind($handle);
+        $records = [];
+        while (($fields = fgetcsv($handle, null, ',', '"', '')) !== false) {
+            if (implode('', array_map(fn ($f) => trim((string) $f), $fields)) !== '') {
+                $records[] = array_map(fn ($f) => (string) $f, $fields);
+            }
+        }
+        fclose($handle);
+        if (! $records) {
             return [];
         }
 
-        $header = array_map(fn ($h) => strtolower(trim($h)), str_getcsv($lines[0]));
+        $header = array_map(fn ($h) => strtolower(trim($h)), $records[0]);
         $titleCol = array_search('title', $header, true);
         $typeCol = array_search('type', $header, true);
         $yearCol = array_search('year', $header, true);
@@ -98,21 +116,30 @@ class LibrarySource
         if ($titleCol === false) {
             $titleCol = 0;
         } else {
-            array_shift($lines);
+            array_shift($records);
         }
 
         $rows = [];
-        foreach ($lines as $line) {
-            $cols = str_getcsv($line);
+        foreach ($records as $cols) {
             $row = self::row(
                 $cols[$titleCol] ?? '',
                 $typeCol === false ? null : ($cols[$typeCol] ?? null),
                 $yearCol === false ? null : ($cols[$yearCol] ?? null),
                 array_map(fn ($i) => $cols[$i] ?? null, $idCols),
             );
-            if ($row) {
-                $rows[] = $row;
+            if (! $row) {
+                continue;
             }
+            // What the old comma-splitting parser stored for this row.
+            if (str_contains(implode('', $cols), ',')) {
+                $old = explode(',', implode(',', $cols));
+                $oldTitle = mb_substr(trim($old[$titleCol] ?? ''), 0, 200);
+                if ($oldTitle !== '') {
+                    $row['legacy_title'] = $oldTitle;
+                    $row['legacy_year'] = $yearCol === false ? null : ((int) ($old[$yearCol] ?? null) ?: null);
+                }
+            }
+            $rows[] = $row;
         }
 
         return $rows;
@@ -157,6 +184,10 @@ class LibrarySource
      * paste). Returns how many titles were new. Nothing is removed here;
      * see removeMissing() for mirror mode.
      *
+     * A row's title is shown with its article in front ("Matrix, The" in a
+     * catalog-style sheet is "The Matrix"; SortTitle::display), and still
+     * sorts under M. The sheet's own spelling is kept as source_title.
+     *
      * A row is matched by the sheet's own spelling (source_title/year), so a
      * title the host renamed in the app keeps its new name and isn't added
      * again; then by its current name, so a title added in the app (TBW)
@@ -172,15 +203,38 @@ class LibrarySource
         $now = now();
         $new = 0;
         foreach ($rows as $row) {
-            $item = LibraryItem::query()->where('host_id', $host->id)
-                ->where('source_title', $row['title'])->where('source_year', $row['year'])->first()
-                ?? LibraryItem::query()->where('host_id', $host->id)
-                    ->where('title', $row['title'])->where('year', $row['year'])->first();
+            $bySource = LibraryItem::query()->where('host_id', $host->id)
+                ->where('source_title', $row['sheet_title'])->where('source_year', $row['year'])->first();
+            $item = $bySource ?? LibraryItem::query()->where('host_id', $host->id)
+                ->where('title', $row['title'])->where('year', $row['year'])->first();
+            // Stored by the old parser, cut at a comma: repaired, not added again.
+            $legacy = ! $item && isset($row['legacy_title'])
+                ? LibraryItem::query()->where('host_id', $host->id)->where('origin', $origin)
+                    ->where('source_title', $row['legacy_title'])->where('source_year', $row['legacy_year'])->first()
+                : null;
+            $item ??= $legacy;
 
             if ($item) {
                 $changes = ['in_collection' => true] + self::idChanges($item, $row);
-                if ($item->source_title === null) {
-                    $changes += ['source_title' => $row['title'], 'source_year' => $row['year']];
+                // Matched by its name, not the sheet's spelling: that is its spelling now.
+                if (! $bySource) {
+                    $changes = ['source_title' => $row['sheet_title'], 'source_year' => $row['year']] + $changes;
+                }
+                if ($legacy && ! $item->edited_at && $item->year !== $row['year']
+                    && ! LibraryItem::query()->where('host_id', $host->id)->where('id', '!=', $item->id)
+                        ->where('title', $row['title'])->where('year', $row['year'])->exists()) {
+                    $changes += ['year' => $row['year']];
+                }
+                // Its poster was looked up by the cut title, without a year.
+                if ($legacy && $item->matched_by !== 'host') {
+                    $changes += ['tmdb_checked_at' => null];
+                }
+                // Its name as it reads ("Matrix, The" becomes "The Matrix"), unless
+                // the host renamed it in the app, or another title already has it.
+                if (! $item->edited_at && $item->title !== $row['title']
+                    && ! LibraryItem::query()->where('host_id', $host->id)->where('id', '!=', $item->id)
+                        ->where('title', $row['title'])->where('year', $row['year'])->exists()) {
+                    $changes += ['title' => $row['title']];
                 }
                 // The sheet's type, unless the host has set it in the app.
                 if (! $item->edited_at) {
@@ -199,7 +253,7 @@ class LibrarySource
                 'added_at' => $now,
                 'origin' => $origin,
                 'in_collection' => true,
-                'source_title' => $row['title'],
+                'source_title' => $row['sheet_title'],
                 'source_year' => $row['year'],
                 'source_tmdb_id' => $row['tmdb_id'],
                 'source_imdb_id' => $row['imdb_id'],
@@ -278,7 +332,7 @@ class LibrarySource
     {
         $listed = [];
         foreach ($rows as $row) {
-            $listed[$row['title']."\0".$row['year']] = true;
+            $listed[$row['sheet_title']."\0".$row['year']] = true;
         }
 
         $sheetItems = LibraryItem::query()->where('host_id', $host->id)
@@ -361,9 +415,13 @@ class LibrarySource
         $type = strtolower(trim((string) $type));
         $type = in_array($type, ['series', 'show', 'tv'], true) ? 'series' : 'film';
 
+        $title = mb_substr($title, 0, 200);
+        $display = SortTitle::display($title);
+
         return [
-            'title' => mb_substr($title, 0, 200),
-            'sort_title' => SortTitle::from($title),
+            'title' => $display,
+            'sheet_title' => $title,
+            'sort_title' => SortTitle::from($display),
             'type' => $type,
             'year' => (int) $year ?: null,
         ] + self::ids($idCells);

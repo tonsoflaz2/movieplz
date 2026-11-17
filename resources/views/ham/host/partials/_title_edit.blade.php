@@ -13,7 +13,7 @@
 <block id="{{ $box }}" style="bg-black bg-opacity-10 p-15 rounded-lg mb-10">
     <p style="font-base font-bold mb-10">Edit {{ $item->title }}</p>
 
-    @if ($item->origin === 'sheet' && $item->source_title && ($item->source_title !== $item->title || $item->source_year !== $item->year))
+    @if ($item->origin === 'sheet' && $item->source_title && (\App\Support\SortTitle::display($item->source_title) !== $item->title || $item->source_year !== $item->year))
         <p style="text-red-100 font-xs mb-10">
             Edited in MoviePlz. Your Google Sheet still says "{{ $item->source_title }}{{ $item->source_year ? ' ('.$item->source_year.')' : '' }}".
         </p>
