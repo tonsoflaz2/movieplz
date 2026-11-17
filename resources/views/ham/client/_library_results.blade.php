@@ -1,5 +1,12 @@
 {{--
-    Library results — rows only, with infinite scroll.
+    Library results — rows only, with infinite scroll that loads ahead.
+
+    A page is LibraryController::PAGE titles. PREFETCH_AHEAD rows before
+    its end sits a 1-px trigger: when it scrolls into view it fetches the
+    next page and swaps it over the #load-more-N placeholder at the end, so
+    the next titles are usually there before the person reaches them. The
+    placeholder shows a spinner meanwhile, with "Load more" in case the
+    fetch failed.
 
     Rendered inside #library-results by library.blade.php, returned on
     its own by GET /library/search.ham for a search (swapped into
@@ -8,12 +15,24 @@
     padding: each page lands inside the previous one's list.
 
     Variables:
-      $items  — Collection of LibraryItem (page of 20)
+      $items  — Collection of LibraryItem (one page)
       $query  — search term (may be empty)
       $type   — 'film', 'series', or null
       $offset — next page offset
 --}}
-@if ($items->isEmpty() && ($offset ?? 20) <= 20)
+@php
+    $page = \App\Http\Controllers\Client\LibraryController::PAGE;
+    $full = $items->count() >= $page;
+    $nextOffset = $offset ?? $page;
+    if ($full) {
+        $params = ['offset' => $nextOffset];
+        if (!empty($query)) $params['q'] = $query;
+        if (!empty($type)) $params['type'] = $type;
+        $nextUrl = '/library/search.ham?' . http_build_query($params);
+        $prefetchAt = max(0, $items->count() - \App\Http\Controllers\Client\LibraryController::PREFETCH_AHEAD);
+    }
+@endphp
+@if ($items->isEmpty() && $nextOffset <= $page)
     <block style="p-15 bg-black bg-opacity-10 rounded-lg">
         <p style="text-white font-base font-bold mb-5">
             @if ($query !== '')
@@ -51,6 +70,9 @@
     </block>
 @else
     @foreach ($items as $item)
+        @if ($full && $loop->index === $prefetchAt)
+            <block action="{{ $nextUrl }}" target="#load-more-{{ $nextOffset }}" swap="outer" trigger="revealed" style="h-1"></block>
+        @endif
         <block style="bg-black bg-opacity-10 rounded-lg mb-8 p-0"
                action="navigate:/library/{{ $item->id }}.ham" title="{{ $item->title }}">
             <flex column_widths="1 4">
@@ -74,23 +96,17 @@
         </block>
     @endforeach
 
-    {{-- Infinite scroll: load the next 20 when this sentinel is revealed --}}
-    @if ($items->count() >= 20)
-        @php
-            $nextOffset = $offset ?? 20;
-            $params = ['offset' => $nextOffset];
-            if (!empty($query)) $params['q'] = $query;
-            if (!empty($type)) $params['type'] = $type;
-            $nextUrl = '/library/search.ham?' . http_build_query($params);
-        @endphp
-        <block
-            id="load-more-{{ $nextOffset }}"
-            action="{{ $nextUrl }}"
-            target="#load-more-{{ $nextOffset }}"
-            swap="outer"
-            trigger="revealed">
+    {{-- Where the next page lands. The trigger above has usually fetched it
+         by the time this is on screen. --}}
+    @if ($full)
+        <block id="load-more-{{ $nextOffset }}">
             <center style="p-15">
                 <indicator type="circular" color="white"></indicator>
+            </center>
+            <center style="pb-15">
+                <button action="{{ $nextUrl }}" target="#load-more-{{ $nextOffset }}" swap="outer" style="plain #FECACA sm">
+                    Load more
+                </button>
             </center>
         </block>
     @endif

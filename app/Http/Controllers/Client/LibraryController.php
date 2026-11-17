@@ -10,6 +10,15 @@ use Illuminate\Http\Request;
 class LibraryController extends Controller
 {
     /**
+     * Titles per page of the library list. The next page is fetched while
+     * PREFETCH_AHEAD rows of this one are still below the screen, so
+     * scrolling doesn't stop at a page's end to wait for it.
+     */
+    public const PAGE = 40;
+
+    public const PREFETCH_AHEAD = 15;
+
+    /**
      * GET /library.ham — full library listing, partial.
      */
     public function index(Request $request)
@@ -29,7 +38,9 @@ class LibraryController extends Controller
             $query->where('type', $type);
         }
 
-        $items = $query->orderBy('sort_title')->limit(20)->get();
+        // id breaks ties (a remake shares its sort title), so no title is
+        // shown twice or skipped across pages.
+        $items = $query->orderBy('sort_title')->orderBy('id')->limit(self::PAGE)->get();
 
         return response()
             ->view('ham.client.library', [
@@ -37,7 +48,7 @@ class LibraryController extends Controller
                 'items' => $items,
                 'query' => '',
                 'type' => $type,
-                'offset' => 20,
+                'offset' => self::PAGE,
             ])
             ->header('Content-Type', 'text/html');
     }
@@ -70,9 +81,9 @@ class LibraryController extends Controller
         }
 
         $offset = max(0, (int) $request->query('offset', 0));
-        $items = $query->orderBy('sort_title')
+        $items = $query->orderBy('sort_title')->orderBy('id')
             ->offset($offset)
-            ->limit(20)
+            ->limit(self::PAGE)
             ->get();
 
         return response()
@@ -81,7 +92,7 @@ class LibraryController extends Controller
                 'items' => $items,
                 'query' => $q,
                 'type' => $type,
-                'offset' => $offset + 20,
+                'offset' => $offset + self::PAGE,
             ])
             ->header('Content-Type', 'text/html');
     }
