@@ -20,6 +20,7 @@
 <h2>Using a Google Sheet</h2>
 <ul>
     <li>Put <em>Title</em> in the first row (<em>Type</em> and <em>Year</em> are optional: type is film or series).</li>
+    <li>For exact posters and descriptions, add <em>TMDB</em>, <em>IMDb</em> or <em>TVDB</em> columns with each title's ID (for example 949, tt0113277 or 81189; links work too). MoviePlz looks titles up on The Movie Database by the TMDB ID first, then the IMDb ID, then the TVDB ID, and by name when a row has none.</li>
     <li>In Google Sheets, choose <em>Share</em>, set General access to <em>Anyone with the link</em> (Viewer), and copy the link. You don't need to publish it to the web.</li>
     <li>Paste the link in MoviePlz under <em>Add titles</em>. New rows show up within a few minutes.</li>
     <li>To make the sheet your whole library, turn on <em>My sheet is my whole library</em> under <em>Add titles</em>. A title you take out of the sheet then leaves MoviePlz within a few minutes too. Titles added through a suggestion or pasted stay.</li>

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\LibraryItem;
+use App\Support\TmdbIds;
 use App\Support\TmdbMatch;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -39,8 +40,30 @@ class TmdbEnrich extends Command
         $unmatched = 0;
 
         foreach ($items as $item) {
+            // The host picked this one by hand (Edit): --force leaves it be.
+            if ($item->matched_by === 'host') {
+                $item->forceFill(['tmdb_checked_at' => now()])->save();
+                continue;
+            }
+
+            // The sheet's IDs first: TMDB, then IMDb, then TVDB.
+            if ($item->hasSourceIds()) {
+                $byId = TmdbIds::lookup($item, $token);
+                usleep(250_000);
+                if ($byId === null) {
+                    continue; // TMDB unreachable or erroring: try again next run
+                }
+                if ($byId) {
+                    $item->forceFill($byId + ['tmdb_checked_at' => now()])->save();
+                    $enriched++;
+                    $this->line("  ✓ {$item->title} ({$item->year}) by {$byId['matched_by']}");
+                    continue;
+                }
+                // None of its IDs found anything: search by name, as for any title.
+            }
+
             // Another library already has this title: no TMDB call.
-            if (! $this->option('force') && $known = LibraryItem::knownDetails($item->title, $item->year, $item->type)) {
+            if (! $this->option('force') && ! $item->hasSourceIds() && $known = LibraryItem::knownDetails($item->title, $item->year, $item->type)) {
                 $item->forceFill($known)->save();
                 $reused++;
                 continue;
@@ -53,7 +76,7 @@ class TmdbEnrich extends Command
 
             // A title TMDB doesn't know is marked checked too, so it isn't
             // retried ahead of new titles every run.
-            $item->forceFill(($result ?: []) + ['tmdb_checked_at' => now()])->save();
+            $item->forceFill(($result ?: []) + ['tmdb_checked_at' => now(), 'matched_by' => null])->save();
             if ($result) {
                 $enriched++;
                 $this->line("  ✓ {$item->title} ({$item->year})");

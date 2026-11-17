@@ -27,6 +27,10 @@ class LibraryItem extends Model
         'in_collection',
         'source_title',
         'source_year',
+        'source_tmdb_id',
+        'source_imdb_id',
+        'source_tvdb_id',
+        'matched_by',
         'edited_at',
     ];
 
@@ -42,6 +46,12 @@ class LibraryItem extends Model
     public const ORIGIN_SHEET = 'sheet';
     public const ORIGIN_PASTE = 'paste';
     public const ORIGIN_APP = 'app';
+
+    /** Whether the sheet gave any ID to match it by. */
+    public function hasSourceIds(): bool
+    {
+        return $this->source_tmdb_id !== null || $this->source_imdb_id !== null || $this->source_tvdb_id !== null;
+    }
 
     public function host(): BelongsTo
     {

@@ -16,9 +16,11 @@ use Illuminate\Support\Facades\Log;
  * sync also removes the sheet's titles that the sheet no longer lists.
  * Titles added in the app (through a suggestion) or pasted always stay.
  *
- * A sheet needs a Title column; Type (film/series) and Year are optional.
- * Columns are found by their header, so any order works. Without a
- * recognisable header the first column is the title.
+ * A sheet needs a Title column; Type (film/series) and Year are optional,
+ * and so are TMDB, IMDb and TVDB ID columns, which make a title's poster
+ * and details come from that exact entry (see TmdbIds). Columns are found
+ * by their header, so any order works. Without a recognisable header the
+ * first column is the title.
  */
 class LibrarySource
 {
@@ -83,6 +85,16 @@ class LibrarySource
         $titleCol = array_search('title', $header, true);
         $typeCol = array_search('type', $header, true);
         $yearCol = array_search('year', $header, true);
+        // "TMDB", "tmdb id", "TMDb ID", "IMDb", "TVDB ID"…
+        $idCols = [];
+        foreach ($header as $i => $h) {
+            $key = preg_replace('/[^a-z]/', '', $h);
+            foreach (['tmdb', 'imdb', 'tvdb'] as $db) {
+                if (in_array($key, [$db, $db.'id'], true) && ! isset($idCols[$db])) {
+                    $idCols[$db] = $i;
+                }
+            }
+        }
         if ($titleCol === false) {
             $titleCol = 0;
         } else {
@@ -96,6 +108,7 @@ class LibrarySource
                 $cols[$titleCol] ?? '',
                 $typeCol === false ? null : ($cols[$typeCol] ?? null),
                 $yearCol === false ? null : ($cols[$yearCol] ?? null),
+                array_map(fn ($i) => $cols[$i] ?? null, $idCols),
             );
             if ($row) {
                 $rows[] = $row;
@@ -149,6 +162,10 @@ class LibrarySource
      * again; then by its current name, so a title added in the app (TBW)
      * that the sheet now lists joins the collection. added_at is set once,
      * when the title first arrives.
+     *
+     * The sheet's IDs are kept with the title (source_*_id). When they
+     * change, the title is looked up again (tmdb_checked_at cleared; its
+     * poster stays until then), unless the host picked its match by hand.
      */
     public static function import(Host $host, array $rows, string $origin = LibraryItem::ORIGIN_SHEET): int
     {
@@ -161,7 +178,7 @@ class LibrarySource
                     ->where('title', $row['title'])->where('year', $row['year'])->first();
 
             if ($item) {
-                $changes = ['in_collection' => true];
+                $changes = ['in_collection' => true] + self::idChanges($item, $row);
                 if ($item->source_title === null) {
                     $changes += ['source_title' => $row['title'], 'source_year' => $row['year']];
                 }
@@ -184,11 +201,15 @@ class LibrarySource
                 'in_collection' => true,
                 'source_title' => $row['title'],
                 'source_year' => $row['year'],
+                'source_tmdb_id' => $row['tmdb_id'],
+                'source_imdb_id' => $row['imdb_id'],
+                'source_tvdb_id' => $row['tvdb_id'],
             ]);
             $new++;
             // Posters and overviews at once for titles another library
-            // already has; the rest wait for tmdb:enrich.
-            if ($known = LibraryItem::knownDetails($row['title'], $row['year'], $row['type'])) {
+            // already has; the rest wait for tmdb:enrich. A title with IDs
+            // is matched by them instead, not by its name.
+            if (! $item->hasSourceIds() && $known = LibraryItem::knownDetails($row['title'], $row['year'], $row['type'])) {
                 $item->forceFill($known)->save();
             }
         }
@@ -284,7 +305,53 @@ class LibrarySource
         return [$missing->count(), 0];
     }
 
-    private static function row(string $title, ?string $type, ?string $year): ?array
+    /**
+     * The changes to [item] when its sheet row's IDs are [row]'s: the new
+     * IDs, and a fresh lookup when they differ, unless the host picked the
+     * match by hand or the TMDB ID already matches.
+     */
+    private static function idChanges(LibraryItem $item, array $row): array
+    {
+        $ids = ['source_tmdb_id' => $row['tmdb_id'], 'source_imdb_id' => $row['imdb_id'], 'source_tvdb_id' => $row['tvdb_id']];
+        $changed = $ids['source_tmdb_id'] !== $item->source_tmdb_id
+            || $ids['source_imdb_id'] !== $item->source_imdb_id
+            || $ids['source_tvdb_id'] !== $item->source_tvdb_id;
+        if (! $changed) {
+            return [];
+        }
+
+        $alreadyRight = $ids['source_tmdb_id'] !== null && $ids['source_tmdb_id'] === $item->tmdb_id;
+        $relook = $item->matched_by !== 'host' && ! $alreadyRight && array_filter($ids) !== [];
+
+        return $ids + ($relook ? ['tmdb_checked_at' => null] : [])
+            + ($alreadyRight && $item->matched_by !== 'host' ? ['matched_by' => 'tmdb_id'] : []);
+    }
+
+    /**
+     * The IDs in a sheet's TMDB, IMDb and TVDB cells, or null for each that
+     * is blank or isn't an ID. Links work too: themoviedb.org/movie/603-…,
+     * imdb.com/title/tt0133093/.
+     *
+     * @return array{tmdb_id: ?string, imdb_id: ?string, tvdb_id: ?string}
+     */
+    public static function ids(array $cells): array
+    {
+        $cell = function (string $db) use ($cells): string {
+            $value = trim((string) ($cells[$db] ?? ''));
+
+            // A number Sheets formatted with thousands separators comes as "1,396".
+            return preg_match('/^\d{1,3}(?:,\d{3})+$/', $value) ? str_replace(',', '', $value) : $value;
+        };
+
+        $tmdb = $cell('tmdb');
+        $tmdb = preg_match('#^(\d+)(?:\.0+)?$#', $tmdb, $m) || preg_match('#themoviedb\.org/(?:movie|tv)/(\d+)#i', $tmdb, $m) ? $m[1] : null;
+        $imdb = preg_match('/\b(tt\d{7,10})\b/i', $cell('imdb'), $m) ? strtolower($m[1]) : null;
+        $tvdb = preg_match('#^(\d+)(?:\.0+)?$#', $cell('tvdb'), $m) ? $m[1] : null;
+
+        return ['tmdb_id' => $tmdb, 'imdb_id' => $imdb, 'tvdb_id' => $tvdb];
+    }
+
+    private static function row(string $title, ?string $type, ?string $year, array $idCells = []): ?array
     {
         $title = trim($title);
         if ($title === '') {
@@ -299,6 +366,6 @@ class LibrarySource
             'sort_title' => SortTitle::from($title),
             'type' => $type,
             'year' => (int) $year ?: null,
-        ];
+        ] + self::ids($idCells);
     }
 }

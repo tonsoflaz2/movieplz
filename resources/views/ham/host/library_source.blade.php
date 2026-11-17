@@ -57,6 +57,11 @@
                     The year helps find the right poster. Columns can be in any order,
                     and other columns are ignored. The first tab is used.
                 </p>
+                <p style="text-red-100 font-sm mb-10">
+                    For exact posters, add TMDB, IMDb or TVDB columns with each title's ID
+                    (like 949, tt0113277 or 81189; links work too). MoviePlz tries TMDB first,
+                    then IMDb, then TVDB, and searches by name when a row has none.
+                </p>
                 <p style="text-white font-sm font-bold mb-5">2. One title per row</p>
                 <p style="text-red-100 font-sm mb-10">No blank rows needed, and no merged cells.</p>
                 <p style="text-white font-sm font-bold mb-5">3. Share it</p>

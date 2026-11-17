@@ -66,7 +66,7 @@ class TitleEditController extends Controller
         ] + ($request->boolean('keep') ? ['in_collection' => true] : [])
           // A new name needs a new poster: until one is picked, the
           // nightly lookup may find it.
-          + ($changed ? ['tmdb_id' => null, 'poster_url' => null, 'overview' => null, 'tmdb_checked_at' => null] : []))->save();
+          + ($changed ? ['tmdb_id' => null, 'poster_url' => null, 'overview' => null, 'tmdb_checked_at' => null, 'matched_by' => null] : []))->save();
 
         // The friends' suggestions that put it on the list say the same.
         $item->suggestions()->update(['title' => $data['title'], 'year' => $data['year'], 'type' => $data['type']]);
@@ -88,7 +88,7 @@ class TitleEditController extends Controller
         $pick = (string) $request->query('pick', '');
 
         if ($pick === 'none') {
-            $item->forceFill(['tmdb_id' => null, 'poster_url' => null, 'overview' => null, 'tmdb_checked_at' => now()])->save();
+            $item->forceFill(['tmdb_id' => null, 'poster_url' => null, 'overview' => null, 'tmdb_checked_at' => now(), 'matched_by' => 'host'])->save();
 
             return $this->box($item, $in);
         }
@@ -104,6 +104,7 @@ class TitleEditController extends Controller
             'poster_url' => $chosen['poster_url'],
             'overview' => $chosen['overview'],
             'tmdb_checked_at' => now(),
+            'matched_by' => 'host',
         ])->save();
         Cache::forget($this->cacheKey($item));
 
