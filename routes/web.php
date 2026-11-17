@@ -96,6 +96,10 @@ Route::middleware('auth.session')->group(function () {
 
     // Disconnect this phone (hosts and friends): keeps everything.
     Route::get('/account/disconnect.ham', [AccountController::class, 'disconnectPanel']);
+
+    // Each person's color theme.
+    Route::get('/theme.ham', [\App\Http\Controllers\ThemeController::class, 'show']);
+    Route::post('/theme', [\App\Http\Controllers\ThemeController::class, 'update']);
     Route::post('/account/disconnect', [AccountController::class, 'disconnect']);
 });
 

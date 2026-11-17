@@ -114,6 +114,8 @@
         View all suggestions
     </button>
 
+    @include('ham.partials._theme_button')
+
     @include('ham.partials._disconnect', [
         'kept' => 'Your library, friends and suggestions are kept, and you can reconnect with a code.',
     ])

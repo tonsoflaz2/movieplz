@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.session' => \App\Http\Middleware\RequireAuth::class,
         ]);
 
+        // Each person's color theme, applied to every HAM screen on the way out.
+        $middleware->web(append: \App\Http\Middleware\ApplyTheme::class);
+
         // The mobile shell is the only caller of HAM routes. It's not a
         // browser, so CSRF tokens don't apply — the threat model that
         // CSRF defends against (cross-site form submission) doesn't
@@ -32,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'requests/*',
             'api/*',
             'account/*',
+            'theme',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

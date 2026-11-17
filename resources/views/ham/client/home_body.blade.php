@@ -61,6 +61,8 @@
         </button>
     @endif
 
+    @include('ham.partials._theme_button')
+
     @include('ham.partials._disconnect', [
         'kept' => 'Your suggestions are kept, and you can reconnect with a code.',
     ])

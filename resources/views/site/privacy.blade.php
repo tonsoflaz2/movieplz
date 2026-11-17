@@ -12,6 +12,7 @@
     <li><strong>Your list</strong>: the titles you add, by hand or from a Google Sheet you link.</li>
     <li><strong>Suggestions</strong>: the titles, years and notes friends send, what happened to them (in progress, added, declined), and any reply the host writes back.</li>
     <li><strong>A notification token</strong> for your device, if you allow notifications, so we can tell you about suggestions.</li>
+    <li><strong>Your theme</strong>: the colors you pick for the app, if you change them.</li>
     <li><strong>A session cookie</strong> that keeps you signed in to your list on this device.</li>
     <li>Our server's standard <strong>logs</strong> (including IP addresses), kept for a short time to run and protect the service.</li>
 </ul>
