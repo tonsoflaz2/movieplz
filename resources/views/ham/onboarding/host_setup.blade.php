@@ -1,9 +1,9 @@
 {{--
-    Host setup — navigated to from role choice. Asks the host's name
-    (their library is called "{name}'s library"), then POST
+    Host setup — navigated to from role choice. Asks the host's name and,
+    optionally, the library's (blank: "{name}'s library"), then POST
     /onboarding/host-setup answers with the first invite code, swapped
     over #host-setup (outer). On a validation error it answers with this
-    form again, with $error and the typed $display_name.
+    form again, with $error and the typed $display_name and $library_name.
 --}}
 <block style="p-20" id="host-setup">
     <h1 style="font-2xl font-bold mb-5">Set up your library</h1>
@@ -27,6 +27,17 @@
             icon="person"
             max-length="40"
             value="{{ $display_name ?? '' }}"
+            style="mb-15"/>
+
+        <input
+            name="library_name"
+            type="text"
+            label="Library name (optional)"
+            placeholder="e.g. Movie Night"
+            helper="Leave it blank and it's called “your name's library”. You can change it anytime."
+            icon="local_movies"
+            max-length="{{ \App\Models\Host::NAME_MAX }}"
+            value="{{ $library_name ?? '' }}"
             style="mb-15"/>
 
         <button

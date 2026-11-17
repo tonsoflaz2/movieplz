@@ -149,6 +149,11 @@ Route::middleware('host.required')->prefix('host')->group(function () {
     Route::post('/library-source', [HostLibrarySourceController::class, 'link']);
     Route::post('/library-sync', [HostLibrarySourceController::class, 'sync']);
     Route::post('/library-mirror', [HostLibrarySourceController::class, 'mirror']);
+
+    // The library's name, renamed from the dashboard heading.
+    Route::get('/library-name.ham', [\App\Http\Controllers\Host\LibraryNameController::class, 'show']);
+    Route::get('/library-name/edit.ham', [\App\Http\Controllers\Host\LibraryNameController::class, 'edit']);
+    Route::post('/library-name', [\App\Http\Controllers\Host\LibraryNameController::class, 'update']);
     Route::post('/library-paste', [HostLibrarySourceController::class, 'paste']);
 
     Route::post('/delete-library', [AccountController::class, 'deleteLibrary']);

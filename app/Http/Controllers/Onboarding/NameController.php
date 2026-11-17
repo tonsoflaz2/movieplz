@@ -71,7 +71,7 @@ class NameController extends Controller
                 }
 
                 $host = Host::create([
-                    'name' => $name."'s library",
+                    'name' => Host::defaultName($name),
                 ]);
 
                 $invite->host_id = $host->id;

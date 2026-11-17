@@ -17,32 +17,38 @@ class HostSetupController extends Controller
     /**
      * POST /onboarding/host-setup
      *
-     * Creates the host with an empty library named after them, a first
-     * invite code, and signs them in. The library is filled afterwards
+     * Creates the host with an empty library, a first invite code, and
+     * signs them in. The library is called what they typed in "Library
+     * name", or "{name}'s library" when they left it blank; they can rename
+     * it later from the dashboard. The library is filled afterwards
      * from the Library source screen (a Google Sheet or pasted titles).
      */
     public function submit(Request $request)
     {
         $name = trim((string) $request->input('display_name', ''));
+        $libraryName = Host::cleanName($request->input('library_name'));
 
-        $validator = Validator::make(['display_name' => $name], [
+        $validator = Validator::make(['display_name' => $name, 'library_name' => $libraryName], [
             'display_name' => ['required', 'string', 'max:40'],
+            'library_name' => ['nullable', 'string', 'max:'.Host::NAME_MAX],
         ], [
             'display_name.required' => 'Enter your name so friends know whose library this is.',
             'display_name.max' => 'Names can be at most 40 characters.',
+            'library_name.max' => 'Library names can be at most '.Host::NAME_MAX.' characters.',
         ]);
 
         if ($validator->fails()) {
             return response()
                 ->view('ham.onboarding.host_setup', [
-                    'error' => $validator->errors()->first('display_name'),
+                    'error' => $validator->errors()->first(),
                     'display_name' => $name,
+                    'library_name' => $libraryName,
                 ])
                 ->header('Content-Type', 'text/html');
         }
 
-        [$client, $invite] = DB::transaction(function () use ($name) {
-            $host = Host::create(['name' => $name."'s library"]);
+        [$client, $invite] = DB::transaction(function () use ($name, $libraryName) {
+            $host = Host::create(['name' => $libraryName !== '' ? $libraryName : Host::defaultName($name)]);
 
             $client = Client::create([
                 'host_id' => $host->id,

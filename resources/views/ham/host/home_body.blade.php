@@ -23,12 +23,7 @@
     $tbw ??= ['new' => 0, 'up_next' => 0, 'seen' => 0, 'total' => 0];
 @endphp
 <block style="p-20">
-    <h1 style="font-2xl font-bold mb-5">
-        {{ $current_client?->host?->name ?? 'Your library' }}
-    </h1>
-    <p style="text-red-100 font-base mb-15">
-        Signed in as host
-    </p>
+    @include('ham.host.partials._library_name', ['host' => $current_client?->host])
 
     {{-- Pending requests summary. Outer box navigates on tap; the
          nested #host-unread box polls every 30s and swaps its own
