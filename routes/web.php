@@ -143,6 +143,9 @@ Route::middleware('host.required')->prefix('host')->group(function () {
 
     Route::get('/clients.ham', [HostClientController::class, 'index']);
     Route::post('/clients/{id}/revoke', [HostClientController::class, 'revoke']);
+    Route::get('/clients/{id}/rename.ham', [HostClientController::class, 'renameForm']);
+    Route::post('/clients/{id}/rename', [HostClientController::class, 'rename']);
+    Route::get('/clients/{id}/row.ham', [HostClientController::class, 'rowView']);
 
     // Where the library's titles come from: a Google Sheet or a pasted list.
     Route::get('/library-source.ham', [HostLibrarySourceController::class, 'show']);

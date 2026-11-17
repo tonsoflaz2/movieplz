@@ -2,16 +2,21 @@
     Single connected-client row.
 
     Used by ham/host/clients.blade.php for the initial list and
-    returned by POST /host/clients/{id}/revoke for swap-in-place after
-    revocation (target="#client-{id}" swap="outer").
+    returned by POST /host/clients/{id}/revoke and /rename (and the
+    rename form's Cancel) for swap-in-place (target="#client-{id}"
+    swap="outer"). Shows the host's nickname for the friend, with the name
+    they picked beside it; Rename swaps in _client_rename.
 
     Variable: $client — Client model
 --}}
 <block id="client-{{ $client->id }}" style="bg-black bg-opacity-10 p-15 rounded-lg mb-10">
     <row spacing="10">
         <icon name="{{ $client->revoked_at ? 'block red-300' : ($client->disconnected_at ? 'person_off red-200' : 'person white') }}"></icon>
-        <p style="font-base font-bold">{{ $client->display_name }}</p>
+        <p style="font-base font-bold">{{ $client->nameForHost() }}</p>
     </row>
+    @if ($client->host_nickname)
+        <p style="text-red-100 font-xs mt-2">Calls themselves {{ $client->display_name }}</p>
+    @endif
 
     <p style="text-red-100 font-sm mt-5">
         Joined {{ $client->created_at->diffForHumans() }}
@@ -37,13 +42,23 @@
              ships with has no confirm= on buttons yet.) --}}
         <block var-asking="false">
             <block @@show="!$asking">
-                <button @click="$asking = true" style="outlined #FECACA sm mt-10">
-                    Revoke access
-                </button>
+                <inline-content spacing="8 8" style="mt-10">
+                    <button
+                        action="/host/clients/{{ $client->id }}/rename.ham"
+                        target="#client-{{ $client->id }}"
+                        swap="outer"
+                        icon="edit"
+                        style="outlined #FECACA sm">
+                        Rename
+                    </button>
+                    <button @click="$asking = true" style="outlined #FECACA sm">
+                        Revoke access
+                    </button>
+                </inline-content>
             </block>
             <block @@show="$asking" style="mt-10">
                 <p style="text-white font-sm mb-10">
-                    Remove {{ $client->display_name }}'s access? They'll need a new code to come back.
+                    Remove {{ $client->nameForHost() }}'s access? They'll need a new code to come back.
                 </p>
                 <inline-content spacing="8 8">
                     <button

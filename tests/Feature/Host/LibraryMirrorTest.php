@@ -198,7 +198,9 @@ class LibraryMirrorTest extends TestCase
         $this->asHost()->get('/host/library-source.ham')->assertOk()
             ->assertSee('My sheet is my whole library: off', false)
             ->assertSee('action="/host/library-mirror?on=1"', false)
-            ->assertSee('confirm="', false);
+            ->assertSee('Yes, turn on', false)
+            ->assertSee('@show="$asking"', false)
+            ->assertDontSee('confirm="', false);
 
         $this->asHost()->post('/host/library-mirror?on=1')->assertOk()
             ->assertSee('Mirror mode is on. Synced: 0 new titles, 1 removed.', false)

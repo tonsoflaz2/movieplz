@@ -38,7 +38,7 @@
     </row>
 
     <p style="text-red-100 font-sm mt-5">
-        From {{ $request->client->display_name }}
+        From {{ $request->client->nameForHost() }}
         @if ($request->year) · {{ $request->year }} @endif
         @if ($request->type) · {{ ucfirst($request->type) }} @endif
         · {{ $request->created_at->diffForHumans() }}
@@ -98,7 +98,7 @@
             <textarea
                 name="reply"
                 label="Reply (optional)"
-                placeholder="Anything you want {{ $request->client->display_name }} to know"
+                placeholder="Anything you want {{ $request->client->nameForHost() }} to know"
                 rows="2"
                 style="mt-5"></textarea>
         </form>

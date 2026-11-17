@@ -9,7 +9,7 @@
     Variable: $item — LibraryItem with suggestions.client loaded
 --}}
 @php
-    $from = $item->suggestions->map(fn ($s) => $s->client?->display_name)->filter()->unique()->implode(', ');
+    $from = $item->suggestions->map(fn ($s) => $s->client?->nameForHost())->filter()->unique()->implode(', ');
     $seenAt = $item->suggestions->max('fulfilled_at') ?? $item->created_at;
 @endphp
 <block id="tbw-item-{{ $item->id }}" var-removing="false" style="bg-black bg-opacity-10 rounded-lg mb-10 p-0">

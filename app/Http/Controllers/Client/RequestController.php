@@ -85,7 +85,7 @@ class RequestController extends Controller
             $hostClient,
             'new-suggestion',
             'New suggestion',
-            "{$client->display_name} suggested {$mediaRequest->title}",
+            "{$client->nameForHost()} suggested {$mediaRequest->title}",
             ['route' => '/host/requests.ham'],
         );
 

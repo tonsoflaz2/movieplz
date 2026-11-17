@@ -9,8 +9,8 @@
       $error   — optional
 --}}
 <block id="request-{{ $request->id }}" style="bg-black bg-opacity-10 p-15 rounded-lg mb-10">
-    <p style="font-base font-bold mb-5">Edit {{ $request->client?->display_name ? $request->client->display_name."'s" : 'this' }} suggestion</p>
-    <p style="text-red-100 font-xs mb-10">Fix a typo, the year or the name. {{ $request->client?->display_name ?? 'Your friend' }} sees the change.</p>
+    <p style="font-base font-bold mb-5">Edit {{ $request->client ? $request->client->nameForHost()."'s" : 'this' }} suggestion</p>
+    <p style="text-red-100 font-xs mb-10">Fix a typo, the year or the name. {{ $request->client?->nameForHost() ?? 'Your friend' }} sees the change.</p>
 
     <form>
         <input

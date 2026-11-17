@@ -56,6 +56,19 @@ class Client extends Model
         return $this->revoked_at !== null;
     }
 
+    /** The longest name, and nickname, a person can have. */
+    public const NAME_MAX = 40;
+
+    /**
+     * The name the host sees: the nickname they gave this friend, or else
+     * the name the friend picked. Only for the host's screens and
+     * notifications; the friend always sees their own display_name.
+     */
+    public function nameForHost(): string
+    {
+        return $this->host_nickname ?? $this->display_name;
+    }
+
     public function isHost(): bool
     {
         return $this->role === 'host';

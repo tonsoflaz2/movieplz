@@ -135,12 +135,29 @@
                     Turn off
                 </button>
             @else
-                <button action="/host/library-mirror?on=1" method="POST" target="#library-source" swap="outer"
-                        confirm="Titles that aren't in your sheet anymore will be removed from MoviePlz. Titles added through suggestions or pasted stay."
-                        confirm-label="Turn on"
-                        style="filled #1F2937 sm">
-                    Turn on
-                </button>
+                {{-- Two steps, the first tap only asks: the engine this app
+                     ships with has no confirm= on buttons. --}}
+                <block var-asking="false">
+                    <block @@show="!$asking">
+                        <button @click="$asking = true" style="filled #1F2937 sm">
+                            Turn on
+                        </button>
+                    </block>
+                    <block @@show="$asking">
+                        <p style="text-white font-sm mb-8">
+                            Titles that aren't in your sheet anymore will be removed from MoviePlz. Titles added through suggestions or pasted stay.
+                        </p>
+                        <inline-content spacing="8 8">
+                            <button action="/host/library-mirror?on=1" method="POST" target="#library-source" swap="outer"
+                                    style="filled #1F2937 sm">
+                                Yes, turn on
+                            </button>
+                            <button @click="$asking = false" style="outlined #FECACA sm">
+                                Cancel
+                            </button>
+                        </inline-content>
+                    </block>
+                </block>
             @endif
 
             @if ($host->library_mirror && $host->library_mirror_held)
@@ -150,12 +167,25 @@
                         your sheet suddenly looked much smaller, which is more often a wrong tab or a bad read than a real clear-out.
                         Check the sheet, then remove them if it's right.
                     </p>
-                    <button action="/host/library-sync?force=1" method="POST" target="#library-source" swap="outer"
-                            confirm="Remove {{ $host->library_mirror_held }} {{ Str::plural('title', $host->library_mirror_held) }} from MoviePlz?"
-                            confirm-label="Remove"
-                            style="outlined #FECACA sm">
-                        Remove them anyway
-                    </button>
+                    <block var-removing="false">
+                        <block @@show="!$removing">
+                            <button @click="$removing = true" style="outlined #FECACA sm">
+                                Remove them anyway
+                            </button>
+                        </block>
+                        <block @@show="$removing">
+                            <p style="text-white font-sm mb-8">Remove {{ $host->library_mirror_held }} {{ Str::plural('title', $host->library_mirror_held) }} from MoviePlz?</p>
+                            <inline-content spacing="8 8">
+                                <button action="/host/library-sync?force=1" method="POST" target="#library-source" swap="outer"
+                                        style="filled #1F2937 sm">
+                                    Yes, remove
+                                </button>
+                                <button @click="$removing = false" style="outlined #FECACA sm">
+                                    Cancel
+                                </button>
+                            </inline-content>
+                        </block>
+                    </block>
                 </block>
             @endif
         </block>

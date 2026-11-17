@@ -39,20 +39,67 @@ class ClientController extends Controller
      */
     public function revoke(Request $request, int $id)
     {
+        $client = $this->friend($request, $id);
+        $client->forceFill(['revoked_at' => now()])->save();
+
+        return $this->row($client);
+    }
+
+    /** GET /host/clients/{id}/rename.ham — the name field, filled in. */
+    public function renameForm(Request $request, int $id)
+    {
+        $client = $this->friend($request, $id);
+
+        return $this->renameView($client, $client->nameForHost());
+    }
+
+    /**
+     * POST /host/clients/{id}/rename — the host's nickname for a friend,
+     * which only the host sees. Blank (or the friend's own name) clears it.
+     */
+    public function rename(Request $request, int $id)
+    {
+        $client = $this->friend($request, $id);
+        $name = trim(preg_replace('/\s+/u', ' ', (string) $request->input('nickname', '')));
+
+        if (mb_strlen($name) > Client::NAME_MAX) {
+            return $this->renameView($client, $name, 'Names can be at most '.Client::NAME_MAX.' characters.');
+        }
+
+        $client->forceFill(['host_nickname' => $name === '' || $name === $client->display_name ? null : $name])->save();
+
+        return $this->row($client);
+    }
+
+    /** GET /host/clients/{id}/row.ham — the row again (Cancel). */
+    public function rowView(Request $request, int $id)
+    {
+        return $this->row($this->friend($request, $id));
+    }
+
+    /** One of this host's friends (never the host's own row). */
+    private function friend(Request $request, int $id): Client
+    {
         /** @var Client $host */
         $host = $request->attributes->get('current_host');
 
-        $client = Client::query()
+        return Client::query()
             ->where('host_id', $host->host_id)
             ->where('role', 'client')
             ->findOrFail($id);
+    }
 
-        $client->forceFill(['revoked_at' => now()])->save();
-
+    private function row(Client $client)
+    {
         return response()
-            ->view('ham.host.partials._client_row', [
-                'client' => $client,
-            ])
+            ->view('ham.host.partials._client_row', ['client' => $client])
+            ->header('Content-Type', 'text/html');
+    }
+
+    private function renameView(Client $client, string $value, ?string $error = null)
+    {
+        return response()
+            ->view('ham.host.partials._client_rename', ['client' => $client, 'value' => $value, 'error' => $error])
             ->header('Content-Type', 'text/html');
     }
 }
