@@ -8,8 +8,9 @@
 <block style="p-20">
     <h1 style="font-2xl font-bold mb-5">Connected clients</h1>
     <p style="text-red-100 font-sm mb-15">
-        People who redeemed an invite code to your library. Tap revoke to
-        kick them off — they'll need a new code to come back.
+        People who redeemed an invite code to your library. Tap someone to
+        see their suggestions. Revoke access kicks them off: they'll need a
+        new code to come back.
     </p>
 
     @if ($clients->isEmpty())

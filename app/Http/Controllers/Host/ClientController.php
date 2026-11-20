@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Host;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\MediaRequest;
 use Illuminate\Http\Request;
 
 class ClientController extends Controller
@@ -21,6 +22,7 @@ class ClientController extends Controller
             ->where('host_id', $host->host_id)
             ->where('role', 'client')
             ->with('invite')
+            ->withCount('requests')
             ->orderByDesc('created_at')
             ->get();
 
@@ -43,6 +45,30 @@ class ClientController extends Controller
         $client->forceFill(['revoked_at' => now()])->save();
 
         return $this->row($client);
+    }
+
+    /**
+     * GET /host/clients/{id}.ham — one friend's suggestions, newest first in
+     * each group: New, In progress, Added, Declined. Pending ones can be
+     * answered right here, the same rows as the inbox.
+     */
+    public function show(Request $request, int $id)
+    {
+        $friend = $this->friend($request, $id);
+        $all = MediaRequest::query()->where('client_id', $friend->id)->with('client')->orderByDesc('created_at')->get();
+
+        return response()
+            ->view('ham.host.client_history', [
+                'friend' => $friend,
+                'total' => $all->count(),
+                'groups' => [
+                    'New' => $all->filter(fn ($r) => $r->status === MediaRequest::STATUS_PENDING && ! $r->up_next_at),
+                    'In progress' => $all->filter(fn ($r) => $r->status === MediaRequest::STATUS_PENDING && $r->up_next_at),
+                    'Added' => $all->where('status', MediaRequest::STATUS_FULFILLED),
+                    'Declined' => $all->where('status', MediaRequest::STATUS_DECLINED),
+                ],
+            ])
+            ->header('Content-Type', 'text/html');
     }
 
     /** GET /host/clients/{id}/rename.ham — the name field, filled in. */

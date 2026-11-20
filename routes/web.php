@@ -143,6 +143,7 @@ Route::middleware('host.required')->prefix('host')->group(function () {
 
     Route::get('/clients.ham', [HostClientController::class, 'index']);
     Route::post('/clients/{id}/revoke', [HostClientController::class, 'revoke']);
+    Route::get('/clients/{id}.ham', [HostClientController::class, 'show'])->whereNumber('id');
     Route::get('/clients/{id}/rename.ham', [HostClientController::class, 'renameForm']);
     Route::post('/clients/{id}/rename', [HostClientController::class, 'rename']);
     Route::get('/clients/{id}/row.ham', [HostClientController::class, 'rowView']);

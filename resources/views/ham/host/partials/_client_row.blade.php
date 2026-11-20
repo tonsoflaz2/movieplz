@@ -5,25 +5,34 @@
     returned by POST /host/clients/{id}/revoke and /rename (and the
     rename form's Cancel) for swap-in-place (target="#client-{id}"
     swap="outer"). Shows the host's nickname for the friend, with the name
-    they picked beside it; Rename swaps in _client_rename.
+    they picked beside it; Rename swaps in _client_rename. Tapping the name
+    opens their suggestion history (/host/clients/{id}.ham).
 
     Variable: $client — Client model
 --}}
+@php
+    $suggestionCount = $client->requests_count ?? $client->requests()->count();
+@endphp
 <block id="client-{{ $client->id }}" style="bg-black bg-opacity-10 p-15 rounded-lg mb-10">
-    <row spacing="10">
-        <icon name="{{ $client->revoked_at ? 'block red-300' : ($client->disconnected_at ? 'person_off red-200' : 'person white') }}"></icon>
-        <p style="font-base font-bold">{{ $client->nameForHost() }}</p>
-    </row>
-    @if ($client->host_nickname)
-        <p style="text-red-100 font-xs mt-2">Calls themselves {{ $client->display_name }}</p>
-    @endif
-
-    <p style="text-red-100 font-sm mt-5">
-        Joined {{ $client->created_at->diffForHumans() }}
-        @if ($client->last_seen_at)
-            · last seen {{ $client->last_seen_at->diffForHumans() }}
+    <block action="navigate:/host/clients/{{ $client->id }}.ham" title="{{ $client->nameForHost() }}">
+        <row spacing="10">
+            <icon name="{{ $client->revoked_at ? 'block red-300' : ($client->disconnected_at ? 'person_off red-200' : 'person white') }}"></icon>
+            <p style="font-base font-bold">{{ $client->nameForHost() }}</p>
+            <spacer/>
+            <icon name="chevron_right red-100"></icon>
+        </row>
+        @if ($client->host_nickname)
+            <p style="text-red-100 font-xs mt-2">Calls themselves {{ $client->display_name }}</p>
         @endif
-    </p>
+
+        <p style="text-red-100 font-sm mt-5">
+            {{ $suggestionCount === 1 ? '1 suggestion' : $suggestionCount.' suggestions' }}
+            · joined {{ $client->created_at->diffForHumans() }}
+            @if ($client->last_seen_at)
+                · last seen {{ $client->last_seen_at->diffForHumans() }}
+            @endif
+        </p>
+    </block>
 
     @if ($client->disconnected_at && ! $client->revoked_at)
         {{-- Disconnected their phone: their suggestions stay, and they can
