@@ -64,17 +64,27 @@
         </p>
     </block>
 
-    {{-- Library stats --}}
+    {{-- Library stats. Tapping them opens the Library tab: the app restarts
+         on it (?open=, as a tapped notification does), so the tab bar
+         shows Library selected. "Add titles" sits outside the tappable
+         part, so it never restarts the app. --}}
     <block style="bg-black bg-opacity-10 p-15 rounded-lg mb-15">
-        <p style="font-base font-bold mb-5">Library</p>
-        <p style="text-white font-sm">
-            {{ $library_total }} total ·
-            {{ $film_count }} {{ Str::plural('film', $film_count) }} ·
-            {{ $series_count }} {{ Str::plural('series', $series_count) }}
-        </p>
-        <p style="text-red-100 font-sm mt-5">
-            {{ $active_client_count }} {{ Str::plural('friend', $active_client_count) }} connected
-        </p>
+        <block action="app:/app.ham?open=/library.ham">
+            <row spacing="10" style="mb-5">
+                <icon name="movie white"></icon>
+                <p style="font-base font-bold">Library</p>
+                <spacer/>
+                <icon name="chevron_right red-100"></icon>
+            </row>
+            <p style="text-white font-sm">
+                {{ $library_total }} total ·
+                {{ $film_count }} {{ Str::plural('film', $film_count) }} ·
+                {{ $series_count }} {{ Str::plural('series', $series_count) }}
+            </p>
+            <p style="text-red-100 font-sm mt-5">
+                {{ $active_client_count }} {{ Str::plural('friend', $active_client_count) }} connected
+            </p>
+        </block>
         <button action="navigate:/host/library-source.ham" title="Add titles"
             style="{{ $library_total === 0 ? 'filled #1F2937' : 'outlined #FECACA' }} sm mt-10">
             {{ $library_total === 0 ? 'Add your titles' : 'Add titles' }}
