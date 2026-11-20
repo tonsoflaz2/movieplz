@@ -130,6 +130,7 @@ Route::middleware('host.required')->prefix('host')->group(function () {
     Route::post('/requests/{id}/up-next', [HostRequestController::class, 'upNext']);
     Route::post('/requests/{id}/fulfill', [HostRequestController::class, 'fulfill']);
     Route::post('/requests/{id}/decline', [HostRequestController::class, 'decline']);
+    Route::post('/requests/{id}/delete', [HostRequestController::class, 'destroy']);
 
     Route::post('/invite-code', [HostInviteCodeController::class, 'generate']);
 

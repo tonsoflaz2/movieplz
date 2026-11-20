@@ -7,6 +7,8 @@
 
     New → "In progress" / "Added" / "Declined" / Edit.
     In progress → "Added" / "Declined" / Edit.
+    Any status → Delete, which asks first (the engine has no confirm= on
+    buttons) and answers with _request_deleted over the row.
 
     "Add to library?" (ticked to start) and the reply go with whichever
     button is tapped (they sit in the same <form>). Added puts the title in
@@ -123,4 +125,31 @@
             <p style="text-red-100 font-sm mt-5">You replied: "{{ $request->host_reply }}"</p>
         @endif
     @endif
+
+    <block var-deleting="false" style="mt-5">
+        <block @@show="!$deleting">
+            <button @click="$deleting = true" icon="delete" style="plain #FECACA sm">
+                Delete
+            </button>
+        </block>
+        <block @@show="$deleting" style="bg-black bg-opacity-15 p-10 rounded mt-5">
+            <p style="text-white font-sm mb-8">
+                Delete {{ $request->client->nameForHost() }}'s suggestion of {{ $request->title }}?
+                It leaves their list too, and they aren't told. This can't be undone.
+            </p>
+            <inline-content spacing="8 8">
+                <button
+                    action="/host/requests/{{ $request->id }}/delete"
+                    method="POST"
+                    target="#request-{{ $request->id }}"
+                    swap="outer"
+                    style="filled #1F2937 sm">
+                    Yes, delete
+                </button>
+                <button @click="$deleting = false" style="outlined #FECACA sm">
+                    Cancel
+                </button>
+            </inline-content>
+        </block>
+    </block>
 </block>

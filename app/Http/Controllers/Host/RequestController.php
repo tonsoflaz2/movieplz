@@ -168,6 +168,23 @@ class RequestController extends Controller
         return $reply === null ? [] : ['host_reply' => $reply];
     }
 
+    /**
+     * POST /host/requests/{id}/delete — a suggestion gone for good, whatever
+     * its status (a duplicate, sent by mistake). It leaves the friend's list
+     * too, without a notification. A title it had added stays in the
+     * library.
+     */
+    public function destroy(Request $request, int $id)
+    {
+        /** @var Client $host */
+        $host = $request->attributes->get('current_host');
+        $suggestion = $this->find($host, $id)->load('client');
+        $view = ['id' => $id, 'title' => $suggestion->title, 'from' => $suggestion->client?->nameForHost() ?? 'a friend'];
+        $suggestion->delete();
+
+        return response()->view('ham.host.partials._request_deleted', $view)->header('Content-Type', 'text/html');
+    }
+
     private function find(Client $host, int $id): MediaRequest
     {
         return MediaRequest::query()->where('host_id', $host->host_id)->findOrFail($id);
